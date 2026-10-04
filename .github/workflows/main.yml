@@ -1,0 +1,38 @@
+name: SPX Ultimate Bot
+
+on:
+  schedule:
+    - cron: '*/5 11-17 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install
+        run: pip install yfinance pandas numpy requests
+      
+      - name: Run Bot
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: python bot.py
+      
+      - name: Save
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@bot.com"
+          git add -A
+          git commit -m "save ultimate bot data" || true
+          git push || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
