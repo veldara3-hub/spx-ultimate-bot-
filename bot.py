@@ -158,7 +158,7 @@ def analyze_news_sentiment():
     except: return 'neutral', []
 
 # ==========================================
-# 🦈 كشف نشاط الحيتان
+#  كشف نشاط الحيتان
 # ==========================================
 def detect_unusual_activity():
     try:
@@ -187,7 +187,7 @@ def suggest_strategy(ind, brain):
     return {'name': 'انتظار', 'desc': 'السوق غير واضح', 'action': 'انتظر إشارة أوضح'}
 
 # ==========================================
-# 📈 حاسبة الربح والخسارة الحية + ماذا لو
+#  حاسبة الربح والخسارة الحية + ماذا لو
 # ==========================================
 def calculate_live_pnl():
     data = load_json(PORTFOLIO_FILE, {'positions': []})
@@ -242,8 +242,8 @@ def generate_prediction():
     
     if score >= 3: decision, advice = "🟢 شراء عقد CALL", "💡 نصيحتي: ادخل بـ 50% من حجمك المعتاد وضع وقف خسارة عند -20%"
     elif score <= -3: decision, advice = "🔴 شراء عقد PUT", "💡 نصيحتي: ادخل بحذر وضع هدف ربح عند +30%"
-    elif score >= 1: decision, advice = "🟡 CALL بحذر", "⚠️ نصيحتي: السوق ليس مثالياً. انتظر تأكيداً إضافياً"
-    elif score <= -1: decision, advice = "🟠 PUT بحذر", "⚠️ نصيحتي: السوق ليس مثالياً. انتظر تأكيداً إضافياً"
+    elif score >= 1: decision, advice = "🟡 CALL بحذر", "️ نصيحتي: السوق ليس مثالياً. انتظر تأكيداً إضافياً"
+    elif score <= -1: decision, advice = " PUT بحذر", "⚠️ نصيحتي: السوق ليس مثالياً. انتظر تأكيداً إضافياً"
     else: decision, advice = "⛔ لا تدخل الآن", "💡 نصيحتي: السوق غير واضح. حافظ على رأس المال"
     
     signal = {'timestamp': datetime.now(timezone.utc).isoformat(), 'price': ind['price'], 'decision': decision, 'score': score, 'reasons': reasons, 'indicators': ind, 'strategy': strategy['name'], 'status': 'pending'}
@@ -254,7 +254,7 @@ def generate_prediction():
     save_brain(brain)
     
     msg = f"🤖 <b>توقع البوت الذكي</b>\n📅 {datetime.now(timezone.utc).strftime('%H:%M UTC')}\n\n"
-    msg += f"🎯 <b>القرار:</b> {decision}\n💰 <b>السعر:</b> ${ind['price']}\n🧠 <b>الاستراتيجية:</b> {strategy['name']}\n\n"
+    msg += f"🎯 <b>القرار:</b> {decision}\n <b>السعر:</b> ${ind['price']}\n🧠 <b>الاستراتيجية:</b> {strategy['name']}\n\n"
     msg += f"<b>الأسباب:</b>\n" + "\n".join([f"• {r}" for r in reasons]) + f"\n\n{advice}\n"
     if levels: msg += f"🗺️ <b>المستويات:</b>\n• مقاومة: {', '.join([f'${r}' for r in levels['resistance']])}\n• دعم: {', '.join([f'${s}' for s in levels['support']])}\n"
     if articles: msg += f"📰 <b>آخر الأخبار:</b>\n" + "\n".join([f"• {art['title'][:50]}..." for art in articles[:2]]) + "\n"
@@ -280,18 +280,16 @@ def generate_daily_report():
     return msg
 
 # ==========================================
-# 💬 التفاعل الذكي مع الدردشة (الميزة الجديدة)
+#  التفاعل الذكي مع الدردشة
 # ==========================================
 def handle_smart_chat(text, ind, brain):
     text = text.lower().strip()
-    # أسئلة عامة عن السوق
     if any(w in text for w in ['كيف السوق', 'وضع السوق', 'السوق اليوم', 'شو رأيك بالسوق']):
         if not ind: return "❌ لا يمكن جلب بيانات السوق حالياً."
         trend = "صاعد 🟢" if ind['price'] > ind['sma_20'] else "هابط 🔴"
-        vix_status = "مستقر ومناسب للتداول 🟢" if ind['vix'] < 20 else "مرتفع، كن حذراً 🔴"
+        vix_status = "مستقر ومناسب للتداول " if ind['vix'] < 20 else "مرتفع، كن حذراً "
         return f"📊 <b>ملخص السوق السريع:</b>\nالاتجاه العام: {trend}\nمؤشر الخوف (VIX): {ind['vix']} ({vix_status})\nRSI الحالي: {ind['rsi']}\n\n💡 <b>نصيحتي:</b> {'السوق يبدو جيداً للفرص الانتقائية' if ind['vix'] < 25 and ind['rsi'] < 60 else 'أنصح بالانتظار أو تقليل حجم الصفقات بسبب الظروف الحالية'}."
     
-    # أسئلة عن الشراء المباشر
     if any(w in text for w in ['اشتري الحين', 'شرا الحين', 'هل ادخل', 'ادخل السوق']):
         if not ind: return "❌ لا يمكن جلب البيانات."
         if ind['rsi'] < brain['rsi_buy_threshold'] and ind['vix'] < brain['vix_fear_level']:
@@ -299,16 +297,15 @@ def handle_smart_chat(text, ind, brain):
         else:
             return "⚠️ <b>لا أنصح بالدخول الآن.</b>\nإما أن السوق في تشبع شرائي أو الفولتيليتي مرتفعة جداً. انتظر إشارة أوضح أو استخدم أمر /predict للتفاصيل."
             
-    # أسئلة عن المخاطرة
     if any(w in text for w in ['فيه خطر', 'مخاطرة', 'سوق خطر']):
         if not ind: return "❌"
         if ind['vix'] > 25: return f"🚨 <b>نعم، هناك مخاطرة عالية.</b>\nمؤشر VIX عند {ind['vix']}، وهذا يعني تقلبات حادة. أنصح بتقليل حجم العقود أو استخدام استراتيجيات التحوط مثل Iron Condor."
-        else: return f"🟢 <b>المخاطرة منخفضة حالياً.</b>\nVIX عند {ind['vix']}، السوق مستقر نسبياً."
+        else: return f" <b>المخاطرة منخفضة حالياً.</b>\nVIX عند {ind['vix']}، السوق مستقر نسبياً."
 
-    return None # إذا لم يفهم السؤال، يكمل للكود العادي
+    return None
 
 # ==========================================
-# 📡 إرسال الرسائل ومعالجة الأوامر
+# 📡 إرسال الرسائل
 # ==========================================
 def send_telegram(msg, parse_mode="HTML"):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
@@ -328,20 +325,17 @@ def get_bot_id():
         return r['result']['id'] if r.get('ok') else None
     except: return None
 
-def get_processed():
-    data = load_json(PROCESSED_FILE, {'processed': [], 'date': ''})
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-    if data.get('date') != today:
-        data = {'processed': [], 'date': today}
-        save_json(PROCESSED_FILE, data)
-    return data.get('processed', [])
+# ==========================================
+#  إصلاح نظام معالجة الرسائل (الجزء المهم)
+# ==========================================
+def get_last_update_id():
+    """جلب آخر update_id تمت معالجته"""
+    data = load_json(PROCESSED_FILE, {'last_update_id': 0})
+    return data.get('last_update_id', 0)
 
-def add_processed(uid):
-    data = load_json(PROCESSED_FILE, {'processed': [], 'date': ''})
-    if uid not in data['processed']:
-        data['processed'].append(uid)
-        if len(data['processed']) > 500: data['processed'] = data['processed'][-250:]
-        save_json(PROCESSED_FILE, data)
+def save_last_update_id(update_id):
+    """حفظ آخر update_id تمت معالجته"""
+    save_json(PROCESSED_FILE, {'last_update_id': update_id})
 
 def get_option_data(strike):
     try:
@@ -350,14 +344,13 @@ def get_option_data(strike):
         chain = ticker.option_chain(ticker.options[0])
         c = chain.calls.iloc[(chain.calls['strike'] - strike).abs().argsort()[:1].item()]
         p = chain.puts.iloc[(chain.puts['strike'] - strike).abs().argsort()[:1].item()]
-        return f"🔥 <b>بيانات العقد: Strike {strike}</b>\n📅 الانتهاء: {ticker.options[0]}\n\n🟢 <b>CALL:</b> ${c['lastPrice']:.2f} | IV: {c['impliedVolatility']*100:.1f}% | Delta: {c['delta']:.2f} | Vol: {int(c['volume'])}\n🔴 <b>PUT:</b> ${p['lastPrice']:.2f} | IV: {p['impliedVolatility']*100:.1f}% | Delta: {p['delta']:.2f} | Vol: {int(p['volume'])}"
+        return f" <b>بيانات العقد: Strike {strike}</b>\n📅 الانتهاء: {ticker.options[0]}\n\n🟢 <b>CALL:</b> ${c['lastPrice']:.2f} | IV: {c['impliedVolatility']*100:.1f}% | Delta: {c['delta']:.2f} | Vol: {int(c['volume'])}\n🔴 <b>PUT:</b> ${p['lastPrice']:.2f} | IV: {p['impliedVolatility']*100:.1f}% | Delta: {p['delta']:.2f} | Vol: {int(p['volume'])}"
     except Exception as e: return f"❌ خطأ: {str(e)}"
 
 def add_option_position(opt_type, strike, entry_price, qty):
     settings = get_settings()
     ind = calculate_indicators()
     
-    # ميزة جديدة: فحص المخاطرة قبل الشراء
     warning_msg = ""
     if ind and ind['vix'] > 30:
         warning_msg = "\n\n🚨 <b>تحذير من البوت:</b> مؤشر VIX مرتفع جداً (>30). التداول الآن عالي المخاطرة. هل أنت متأكد؟"
@@ -375,7 +368,7 @@ def add_option_position(opt_type, strike, entry_price, qty):
 
 def get_portfolio():
     data = load_json(PORTFOLIO_FILE, {'positions': []})
-    if not data['positions']: return "📂 <b>المحفظة فارغة</b>"
+    if not data['positions']: return " <b>المحفظة فارغة</b>"
     pnl_data = calculate_live_pnl()
     msg = "💼 <b>المحفظة النشطة</b>\n━━━━━━━━━━━━━━━\n"
     for i, pos in enumerate(data['positions'], 1):
@@ -384,7 +377,7 @@ def get_portfolio():
         pnl_info = ""
         if pnl_data and i <= len(pnl_data['positions']):
             p = pnl_data['positions'][i-1]
-            pnl_info = f" | {'🟢' if p['pnl'] >= 0 else '🔴'} P&L: ${p['pnl']} ({p['pnl_pct']}%)"
+            pnl_info = f" | {'🟢' if p['pnl'] >= 0 else ''} P&L: ${p['pnl']} ({p['pnl_pct']}%)"
         msg += f"{i}. {emoji} <b>{pos['type']} {pos['strike']}</b> | ${pos['entry']} × {pos['qty']} (${cost:.2f}){pnl_info}\n"
     if pnl_data:
         msg += f"\n━━━━━━━━━━━━━━━\n{'🟢' if pnl_data['total_pnl'] >= 0 else '🔴'} <b>إجمالي P&L:</b> ${pnl_data['total_pnl']}"
@@ -411,7 +404,7 @@ def process_message(text, settings):
 
     # 2. الأوامر التقليدية
     if text == '/help':
-        msg = "🤖 <b>أوامر بوت SPX الجبار:</b>\n\n💬 <b>تحدث معي بشكل طبيعي:</b>\n• 'كيف السوق اليوم؟'\n• 'هل اشتري الحين؟'\n• 'هل فيه مخاطرة؟'\n\n🧠 <b>التحليل:</b>\n/predict - توقع مع نصيحة\n/brain - عرض عقل البوت\n/spx - لوحة التحكم\n\n🔥 <b>الخيارات:</b>\n/option [strike]\n/buy_call [strike] [price] [qty]\n/buy_put [strike] [price] [qty]\n/portfolio - المحفظة مع P&L\n/close [رقم]\n\n📊 <b>متقدم:</b>\n/levels - الدعم والمقاومة\n/sentiment - مشاعر الأخبار\n/whales - نشاط الحيتان\n/strategy - استراتيجية مقترحة\n/events - الأحداث الاقتصادية\n/daily - تقرير نهاية اليوم\n/whatif [السعر] - حساب سيناريو مستقبلي"
+        msg = " <b>أوامر بوت SPX الجبار:</b>\n\n💬 <b>تحدث معي بشكل طبيعي:</b>\n• 'كيف السوق اليوم؟'\n• 'هل اشتري الحين؟'\n• 'هل فيه مخاطرة؟'\n\n🧠 <b>التحليل:</b>\n/predict - توقع مع نصيحة\n/brain - عرض عقل البوت\n/spx - لوحة التحكم\n\n🔥 <b>الخيارات:</b>\n/option [strike]\n/buy_call [strike] [price] [qty]\n/buy_put [strike] [price] [qty]\n/portfolio - المحفظة مع P&L\n/close [رقم]\n\n📊 <b>متقدم:</b>\n/levels - الدعم والمقاومة\n/sentiment - مشاعر الأخبار\n/whales - نشاط الحيتان\n/strategy - استراتيجية مقترحة\n/events - الأحداث الاقتصادية\n/daily - تقرير نهاية اليوم\n/whatif [السعر] - حساب سيناريو مستقبلي"
         send_telegram(msg)
     elif text == '/predict':
         send_telegram("🧠 جاري التحليل...")
@@ -419,29 +412,28 @@ def process_message(text, settings):
         if pred: send_telegram(pred)
     elif text == '/brain':
         acc = (brain['correct_predictions'] / max(1, brain['total_predictions'])) * 100
-        msg = f"🧠 <b>عقل البوت:</b>\n🎯 الدقة: {acc:.1f}%\n📏 RSI شراء: < {brain['rsi_buy_threshold']}\n📏 RSI بيع: > {brain['rsi_sell_threshold']}\n🛡️ VIX خوف: > {brain['vix_fear_level']}\n\n<b>أنماط الأخطاء:</b>\n"
+        msg = f"🧠 <b>عقل البوت:</b>\n الدقة: {acc:.1f}%\n📏 RSI شراء: < {brain['rsi_buy_threshold']}\n📏 RSI بيع: > {brain['rsi_sell_threshold']}\n🛡️ VIX خوف: > {brain['vix_fear_level']}\n\n<b>أنماط الأخطاء:</b>\n"
         for p, c in brain['mistake_patterns'].items(): msg += f"• {p}: {c}\n"
         msg += f"\n📚 <b>آخر درس:</b>\n{brain['last_adjustment_reason']}"
         send_telegram(msg)
     elif text == '/spx':
-        if ind: send_telegram(f"📊 <b>SPX/SPY</b>\n💰 السعر: ${ind['price']}\n📈 RSI: {ind['rsi']}\n📉 MACD: {ind['macd']}\n😱 VIX: {ind['vix']}\n📊 SMA50: ${ind['sma_50']}\n📦 Volume: {ind['volume_ratio']}x")
+        if ind: send_telegram(f" <b>SPX/SPY</b>\n💰 السعر: ${ind['price']}\n📈 RSI: {ind['rsi']}\n📉 MACD: {ind['macd']}\n😱 VIX: {ind['vix']}\n📊 SMA50: ${ind['sma_50']}\n📦 Volume: {ind['volume_ratio']}x")
     elif text == '/levels':
         levels = calculate_support_resistance()
-        if levels: send_telegram(f"🗺️ <b>الدعم والمقاومة</b>\n💰 الحالي: ${levels['current_price']}\n\n🔴 <b>مقاومة:</b>\n" + "\n".join([f"• ${r}" for r in levels['resistance']]) + f"\n\n🟢 <b>دعم:</b>\n" + "\n".join([f"• ${s}" for s in levels['support']]))
+        if levels: send_telegram(f"🗺️ <b>الدعم والمقاومة</b>\n💰 الحالي: ${levels['current_price']}\n\n <b>مقاومة:</b>\n" + "\n".join([f"• ${r}" for r in levels['resistance']]) + f"\n\n🟢 <b>دعم:</b>\n" + "\n".join([f"• ${s}" for s in levels['support']]))
     elif text == '/sentiment':
         sent, arts = analyze_news_sentiment()
         emoji = "🟢" if sent == 'positive' else "🔴" if sent == 'negative' else "🟡"
-        send_telegram(f"📰 <b>مشاعر الأخبار: {sent.upper()}</b> {emoji}\n\n" + "\n".join([f"• {a['title'][:60]}..." for a in arts]))
+        send_telegram(f" <b>مشاعر الأخبار: {sent.upper()}</b> {emoji}\n\n" + "\n".join([f"• {a['title'][:60]}..." for a in arts]))
     elif text == '/whales':
         whales = detect_unusual_activity()
         if whales: send_telegram("🦈 <b>نشاط الحيتان</b>\n\n" + "\n\n".join([f"{'🟢' if w['type'] == 'CALL' else '🔴'} <b>{w['type']} Strike {w['strike']}</b>\n• الحجم: {w['volume']} (×{w['ratio']} من المعدل)" for w in whales]))
-        else: send_telegram("🦈 لا يوجد نشاط غير طبيعي حالياً")
+        else: send_telegram(" لا يوجد نشاط غير طبيعي حالياً")
     elif text == '/strategy':
         if ind:
             strat = suggest_strategy(ind, brain)
-            send_telegram(f"🎯 <b>الاستراتيجية: {strat['name']}</b>\n\n📝 {strat['desc']}\n\n⚡ <b>الإجراء:</b>\n{strat['action']}")
+            send_telegram(f"🎯 <b>الاستراتيجية: {strat['name']}</b>\n\n {strat['desc']}\n\n⚡ <b>الإجراء:</b>\n{strat['action']}")
     elif text == '/events':
-        # محاكاة بسيطة للأحداث (يمكن ربطها بـ API لاحقاً)
         send_telegram("📅 <b>الأحداث الاقتصادية القريبة:</b>\n• تحقق من تقويم ForexFactory أو Investing لأوقات FOMC و CPI.\n(البوت يحذر تلقائياً إذا كان VIX مرتفعاً وقت الأحداث)")
     elif text == '/daily':
         send_telegram("📊 جاري إعداد التقرير...")
@@ -459,7 +451,7 @@ def process_message(text, settings):
             parts = text.split()
             s, msg = add_option_position('CALL', float(parts[1]), float(parts[2]), int(parts[3]))
             send_telegram(msg)
-        except: send_telegram("❌ /buy_call 500 5.0 1")
+        except: send_telegram(" /buy_call 500 5.0 1")
     elif text.startswith('/buy_put '):
         try:
             parts = text.split()
@@ -487,31 +479,93 @@ def process_message(text, settings):
     else: 
         send_telegram("🤔 لم أفهم الأمر تماماً. يمكنك سؤالي بشكل طبيعي مثل:\n• 'كيف السوق اليوم؟'\n• 'هل اشتري الحين؟'\nأو اكتب /help للأوامر.")
 
+# ==========================================
+# 🔧 معالجة الأوامر من الدردشة (مصحح)
+# ==========================================
 def handle_commands():
+    """معالجة الرسائل من الدردشة - يرد فوراً على كل رسالة"""
     bot_id = get_bot_id()
-    processed = get_processed()
+    last_update_id = get_last_update_id()
+    
+    print(f"📡 آخر update_id تمت معالجته: {last_update_id}")
+    
     try:
-        r = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates?offset=0&limit=50", timeout=10).json()
-        if not r.get('ok'): return
-        for update in r.get('result', []):
-            uid = update['update_id']
-            if uid in processed: continue
-            msg = update.get('message', {})
-            if not msg: add_processed(uid); continue
-            sender = msg.get('from', {})
-            if sender.get('is_bot', False) or (bot_id and sender.get('id') == bot_id): add_processed(uid); continue
-            text = msg.get('text', '').strip()
-            if str(msg.get('chat', {}).get('id', '')) != CHAT_ID: add_processed(uid); continue
-            process_message(text, get_settings())
-            add_processed(uid)
-    except Exception as e: print(f"خطأ: {e}")
+        # استخدام offset صحيح: last_update_id + 1 لجلب الرسائل الجديدة فقط
+        url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates?offset={last_update_id + 1}&limit=50&timeout=30"
+        print(f"📡 الاتصال بـ Telegram...")
+        
+        r = requests.get(url, timeout=35).json()
+        
+        if not r.get('ok'):
+            print("❌ فشل الاتصال بـ Telegram")
+            return
+        
+        updates = r.get('result', [])
+        print(f"📨 عدد الرسائل الجديدة: {len(updates)}")
+        
+        if not updates:
+            print("📭 لا توجد رسائل جديدة")
+            return
+        
+        settings = get_settings()
+        processed_count = 0
+        max_update_id = last_update_id
+        
+        for update in updates:
+            update_id = update['update_id']
+            
+            # تحديث آخر update_id
+            if update_id > max_update_id:
+                max_update_id = update_id
+            
+            message = update.get('message', {})
+            if not message:
+                continue
+            
+            # تجاهل رسائل البوت نفسه
+            sender = message.get('from', {})
+            if sender.get('is_bot', False) or (bot_id and sender.get('id') == bot_id):
+                print(f"🤖 تخطي رسالة من البوت")
+                continue
+            
+            text = message.get('text', '').strip()
+            chat_id = str(message.get('chat', {}).get('id', ''))
+            
+            print(f" رسالة من {chat_id}: {text[:50]}")
+            
+            # التحقق من Chat ID
+            if chat_id != CHAT_ID:
+                print(f"⚠️ Chat ID غير مطابق: {chat_id}")
+                continue
+            
+            # معالجة الرسالة والرد عليها
+            try:
+                process_message(text, settings)
+                processed_count += 1
+                print(f"✅ تمت معالجة الرسالة {update_id}")
+            except Exception as e:
+                print(f"❌ خطأ في معالجة الرسالة {update_id}: {e}")
+        
+        # حفظ آخر update_id تمت معالجته
+        save_last_update_id(max_update_id)
+        print(f"✅ تمت معالجة {processed_count} رسالة")
+        print(f"💾 آخر update_id محفوظ: {max_update_id}")
+        
+    except Exception as e:
+        print(f"❌ خطأ في handle_commands: {e}")
 
+# ==========================================
+#  التشغيل التلقائي
+# ==========================================
 def run_autonomous_scan():
-    print("🤖 بدء الفحص التلقائي...")
+    print(" بدء الفحص التلقائي...")
+    
+    # 1. التعلم من الأخطاء
     learned, lessons = deep_learn_from_mistakes()
     if learned:
-        send_telegram("🧠 <b>البوت تعلم دروساً جديدة!</b>\n\n" + "\n".join([f"• {l}" for l in lessons]))
+        send_telegram(" <b>البوت تعلم دروساً جديدة!</b>\n\n" + "\n".join([f"• {l}" for l in lessons]))
     
+    # 2. التوقع التلقائي كل 5 دقائق
     brain = get_brain()
     last_pred = brain.get('last_prediction_sent')
     minutes_since = 999 if not last_pred else (datetime.now(timezone.utc) - datetime.fromisoformat(last_pred)).total_seconds() / 60
@@ -522,13 +576,17 @@ def run_autonomous_scan():
         if pred:
             send_telegram(pred)
             print("✅ تم إرسال التوقع")
+    else:
+        print(f"⏳ انتظار {5 - minutes_since:.1f} دقيقة للتوقع التالي")
     
+    # 3. تنبيه الفرص القوية
     ind = calculate_indicators()
     if ind:
         brain = get_brain()
         if ind['rsi'] < brain['rsi_buy_threshold'] and ind['vix'] < 15 and ind['macd'] > ind['macd_signal']:
             send_telegram(f"🚨 <b>فرصة قوية جداً!</b>\n\nRSI: {ind['rsi']} | VIX: {ind['vix']} | MACD: إيجابي")
-            
+    
+    # 4. تقرير نهاية اليوم
     settings = get_settings()
     current_hour = datetime.now(timezone.utc).hour
     today_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
@@ -540,6 +598,8 @@ def run_autonomous_scan():
 
 if __name__ == '__main__':
     print("🚀 بدء بوت SPX الجبار المتكامل...")
+    print("1️⃣ معالجة رسائل الدردشة...")
     handle_commands()
+    print("2️⃣ الفحص التلقائي...")
     run_autonomous_scan()
     print("✅ انتهى")
