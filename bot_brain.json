@@ -6,7 +6,7 @@
   "correct_predictions": 0,
   "wrong_predictions": 0,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-07T15:35:46.679609+00:00",
+  "last_prediction_sent": "2026-10-07T15:55:09.401837+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
@@ -22,5 +22,10 @@
     "wrong": 0,
     "by_hour": {},
     "by_strategy": {}
+  },
+  "option_success_rate": {
+    "calls": 0,
+    "puts": 0,
+    "total_tracked": 0
   }
 }
