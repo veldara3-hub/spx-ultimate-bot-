@@ -1597,6 +1597,27 @@
         "vix": 15.31
       },
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-07T16:43:34.658802+00:00",
+      "price": 776.36,
+      "decision": "🟡 CALL بحذر",
+      "score": 2,
+      "reasons": [
+        "✅ MACD إيجابي",
+        "🟢 VIX مستقر (15.39)"
+      ],
+      "indicators": {
+        "rsi": 65.29,
+        "macd": 3.1657,
+        "macd_signal": 2.0216,
+        "sma_20": 765.85,
+        "sma_50": 764.57,
+        "volume_ratio": 0.28,
+        "price": 776.36,
+        "vix": 15.39
+      },
+      "status": "pending"
     }
   ]
 }
