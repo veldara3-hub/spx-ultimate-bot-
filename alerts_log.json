@@ -9,6 +9,16 @@
       "key": "2026-10-07_whale_activity",
       "type": "whale",
       "time": "2026-10-07 20:07:24"
+    },
+    {
+      "key": "2026-10-08_breakout_resistance",
+      "type": "breakout",
+      "time": "2026-10-08 14:13:30"
+    },
+    {
+      "key": "2026-10-08_whale_activity",
+      "type": "whale",
+      "time": "2026-10-08 14:13:30"
     }
   ]
 }
