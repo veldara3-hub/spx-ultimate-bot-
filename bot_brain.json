@@ -1,12 +1,12 @@
 {
-  "rsi_buy_threshold": 24,
+  "rsi_buy_threshold": 21,
   "rsi_sell_threshold": 70,
   "vix_fear_level": 25,
   "total_predictions": 45,
   "correct_predictions": 16,
   "wrong_predictions": 29,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-08T11:35:13.417082+00:00",
+  "last_prediction_sent": "2026-10-08T11:54:00.547378+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
@@ -24,6 +24,12 @@
       "date": "2026-10-08T11:35:12.133664+00:00",
       "lessons": [
         "📉 أخطأت 20 مرات في CALLs. RSI → 24"
+      ]
+    },
+    {
+      "date": "2026-10-08T11:53:59.258722+00:00",
+      "lessons": [
+        "📉 أخطأت 20 مرات في CALLs. RSI → 21"
       ]
     }
   ],
