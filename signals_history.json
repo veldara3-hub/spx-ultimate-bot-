@@ -1942,7 +1942,8 @@
         "vix": 15.79
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.19
     },
     {
       "timestamp": "2026-10-08T12:42:53.494104+00:00",
@@ -1967,7 +1968,8 @@
         "vix": 15.69
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.19
     },
     {
       "timestamp": "2026-10-08T13:05:43.207205+00:00",
@@ -1992,7 +1994,8 @@
         "vix": 15.7
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.19
     },
     {
       "timestamp": "2026-10-08T13:30:44.501825+00:00",
@@ -2017,7 +2020,8 @@
         "vix": 15.56
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.51
     },
     {
       "timestamp": "2026-10-08T13:52:13.669412+00:00",
@@ -2042,7 +2046,8 @@
         "vix": 15.37
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.39
     },
     {
       "timestamp": "2026-10-08T14:09:05.368803+00:00",
@@ -2067,7 +2072,8 @@
         "vix": 15.45
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.4
     },
     {
       "timestamp": "2026-10-08T14:34:00.649813+00:00",
@@ -2092,7 +2098,8 @@
         "vix": 15.38
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.3
     },
     {
       "timestamp": "2026-10-08T14:55:08.060705+00:00",
@@ -2117,7 +2124,8 @@
         "vix": 15.26
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.47
     },
     {
       "timestamp": "2026-10-08T15:13:02.709216+00:00",
@@ -2142,7 +2150,8 @@
         "vix": 15.4
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.47
     },
     {
       "timestamp": "2026-10-08T15:36:56.278012+00:00",
@@ -2167,7 +2176,8 @@
         "vix": 15.56
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.55
     },
     {
       "timestamp": "2026-10-08T15:56:47.154736+00:00",
@@ -2192,7 +2202,8 @@
         "vix": 15.57
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.57
     },
     {
       "timestamp": "2026-10-08T16:18:51.139204+00:00",
@@ -2217,7 +2228,8 @@
         "vix": 15.48
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.32
     },
     {
       "timestamp": "2026-10-08T16:42:07.845892+00:00",
@@ -2242,7 +2254,8 @@
         "vix": 15.31
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "wrong",
+      "actual_change": 0.43
     },
     {
       "timestamp": "2026-10-08T17:01:24.316341+00:00",
@@ -2267,7 +2280,8 @@
         "vix": 15.35
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.82
     },
     {
       "timestamp": "2026-10-08T17:22:23.056666+00:00",
@@ -2292,7 +2306,8 @@
         "vix": 16.06
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.88
     },
     {
       "timestamp": "2026-10-08T17:41:26.629634+00:00",
@@ -2317,7 +2332,8 @@
         "vix": 16.22
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.78
     },
     {
       "timestamp": "2026-10-08T17:58:40.617295+00:00",
@@ -2342,7 +2358,8 @@
         "vix": 15.85
       },
       "strategy": "انتظار",
-      "status": "pending"
+      "status": "correct",
+      "actual_change": 0.87
     },
     {
       "timestamp": "2026-10-09T11:13:33.895308+00:00",
@@ -2865,6 +2882,31 @@
         "volume_ratio": 0.27,
         "price": 778.39,
         "vix": 14.87
+      },
+      "strategy": "انتظار",
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-09T18:22:34.914461+00:00",
+      "price": 778.66,
+      "decision": "🟢 شراء CALL",
+      "score": 3,
+      "reasons": [
+        "✅ MACD إيجابي",
+        "🟢 VIX مستقر (14.88)",
+        "📊 السعر فوق SMA20"
+      ],
+      "indicators": {
+        "rsi": 55.66,
+        "macd": 3.6697,
+        "macd_signal": 2.5614,
+        "sma_20": 767.61,
+        "sma_50": 766.29,
+        "bb_upper": 782.96,
+        "bb_lower": 752.25,
+        "volume_ratio": 0.28,
+        "price": 778.66,
+        "vix": 14.88
       },
       "strategy": "انتظار",
       "status": "pending"
