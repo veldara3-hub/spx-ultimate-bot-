@@ -10,8 +10,9 @@ from datetime import datetime, timedelta, timezone
 warnings.filterwarnings('ignore')
 
 # --- إعدادات البوت ---
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', '8672604524:AAHylXIgm78_Mi6LEf1AueOUl4cUxpiaKFA')
-CHAT_ID = os.environ.get('CHAT_ID', '208377256')
+# ملاحظة: تأكد من وضع التوكن في GitHub Secrets وليس هنا مباشرة إذا كان المستودع عاماً
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', 'ضع_التوكن_هنا_للتجربة_المحلية_فقط')
+CHAT_ID = os.environ.get('CHAT_ID', 'ضع_الآيدي_هنا_للتجربة_المحلية_فقط')
 
 # ملفات البيانات
 PORTFOLIO_FILE = 'options_portfolio.json'
@@ -911,11 +912,21 @@ def run_autonomous_scan():
         if auto_alerts:
             for alert in auto_alerts: send_telegram(alert)
 
+# ==========================================
+# ⬇️ تم تعديل هذا الجزء ليعمل مع GitHub Actions ⬇️
+# ==========================================
 if __name__ == '__main__':
-    print("🚀 بدء بوت SPX التلقائي الكامل...")
-    print(f"🕐 الوقت الحالي (السعودية): {get_saudi_time()['time_with_seconds']}")
-    print("1️⃣ معالجة الأوامر اليدوية...")
+    print("🚀 بدء تشغيل بوت SPX (نسخة GitHub Actions)...")
+    saudi_time = get_saudi_time()
+    print(f"🕐 الوقت الحالي (السعودية): {saudi_time['time_with_seconds']}")
+    
+    # إرسال رسالة تشغيل للتأكد من أن البوت يعمل
+    send_telegram(f"🟢 <b>تم تشغيل الفحص الدوري</b>\n🕐 {saudi_time['time_with_seconds']} (السعودية)")
+
+    # 1. معالجة الأوامر اليدوية من تيليجرام
     handle_commands()
-    print("2️⃣ التشغيل التلقائي الكامل (45+ ميزة)...")
+
+    # 2. تشغيل المهام التلقائية (تقارير، تنبيهات، تعلم)
     run_autonomous_scan()
-    print("✅ انتهى - البوت يعمل تلقائياً 100%!")
+
+    print("✅ انتهت الدورة الحالية. في انتظار التشغيل التالي من GitHub...")
