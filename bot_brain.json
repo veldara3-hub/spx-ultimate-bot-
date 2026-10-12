@@ -6,7 +6,7 @@
   "correct_predictions": 30,
   "wrong_predictions": 80,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-12T14:46:17.472746+00:00",
+  "last_prediction_sent": "2026-10-12T15:08:17.822798+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
@@ -304,6 +304,12 @@
     },
     {
       "date": "2026-10-12T14:46:11.213979+00:00",
+      "lessons": [
+        "📉 أخطأت 15 مرات في CALLs. RSI → 15"
+      ]
+    },
+    {
+      "date": "2026-10-12T15:08:16.923515+00:00",
       "lessons": [
         "📉 أخطأت 15 مرات في CALLs. RSI → 15"
       ]
