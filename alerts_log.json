@@ -29,6 +29,16 @@
       "key": "2026-10-09_breakout_resistance",
       "type": "breakout",
       "time": "2026-10-09 16:41:11"
+    },
+    {
+      "key": "2026-10-12_breakout_resistance",
+      "type": "breakout",
+      "time": "2026-10-12 14:15:11"
+    },
+    {
+      "key": "2026-10-12_whale_activity",
+      "type": "whale",
+      "time": "2026-10-12 14:15:11"
     }
   ]
 }
