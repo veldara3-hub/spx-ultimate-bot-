@@ -3535,6 +3535,31 @@
       },
       "strategy": "انتظار",
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-13T14:21:26.853911+00:00",
+      "price": 777.38,
+      "decision": "🟢 شراء CALL",
+      "score": 3,
+      "reasons": [
+        "✅ MACD إيجابي",
+        "🟢 VIX مستقر (15.32)",
+        "📊 السعر فوق SMA20"
+      ],
+      "indicators": {
+        "rsi": 61.68,
+        "macd": 3.9435,
+        "macd_signal": 3.047,
+        "sma_20": 769.65,
+        "sma_50": 767.37,
+        "bb_upper": 784.3,
+        "bb_lower": 755.0,
+        "volume_ratio": 0.11,
+        "price": 777.38,
+        "vix": 15.32
+      },
+      "strategy": "انتظار",
+      "status": "pending"
     }
   ]
 }
