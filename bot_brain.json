@@ -6,7 +6,7 @@
   "correct_predictions": 30,
   "wrong_predictions": 83,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-13T17:01:32.101506+00:00",
+  "last_prediction_sent": "2026-10-13T17:23:40.987348+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
@@ -14,12 +14,6 @@
     "news_conflict": 0
   },
   "learning_history": [
-    {
-      "date": "2026-10-09T12:31:43.540618+00:00",
-      "lessons": [
-        "📉 أخطأت 20 مرات في CALLs. RSI → 15"
-      ]
-    },
     {
       "date": "2026-10-09T12:57:02.269541+00:00",
       "lessons": [
@@ -310,6 +304,12 @@
     },
     {
       "date": "2026-10-13T17:01:30.645950+00:00",
+      "lessons": [
+        "📉 أخطأت 18 مرات في CALLs. RSI → 15"
+      ]
+    },
+    {
+      "date": "2026-10-13T17:23:38.735471+00:00",
       "lessons": [
         "📉 أخطأت 18 مرات في CALLs. RSI → 15"
       ]
