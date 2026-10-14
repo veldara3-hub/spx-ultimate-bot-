@@ -49,6 +49,16 @@
       "key": "2026-10-13_whale_activity",
       "type": "whale",
       "time": "2026-10-13 14:15:22"
+    },
+    {
+      "key": "2026-10-14_breakout_resistance",
+      "type": "breakout",
+      "time": "2026-10-14 14:25:44"
+    },
+    {
+      "key": "2026-10-14_whale_activity",
+      "type": "whale",
+      "time": "2026-10-14 14:25:44"
     }
   ]
 }
