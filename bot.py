@@ -10,7 +10,6 @@ from datetime import datetime, timedelta, timezone
 warnings.filterwarnings('ignore')
 
 # --- إعدادات البوت ---
-# ملاحظة: تأكد من وضع التوكن في GitHub Secrets وليس هنا مباشرة إذا كان المستودع عاماً
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN', 'ضع_التوكن_هنا_للتجربة_المحلية_فقط')
 CHAT_ID = os.environ.get('CHAT_ID', 'ضع_الآيدي_هنا_للتجربة_المحلية_فقط')
 
@@ -64,7 +63,9 @@ def get_option_full_info(strike, opt_type, exp_date):
             'spread': round(float(ask - bid), 2) if ask > 0 else 0,
             'in_the_money': row.get('inTheMoney', False)
         }
-    except: return None
+    except Exception as e:
+        print(f"خطأ في get_option_full_info: {e}")
+        return None
 
 def load_json(fn, default=None):
     if default is None: default = {}
@@ -99,148 +100,6 @@ def get_brain():
 
 def save_brain(brain): save_json(BRAIN_FILE, brain)
 
-def find_promising_cheap_options():
-    try:
-        ticker = yf.Ticker('SPY')
-        if not ticker.options: return None, "❌ لا توجد بيانات."
-        ind = calculate_indicators()
-        if not ind: return None, "❌ لا يمكن جلب المؤشرات."
-        brain = get_brain()
-        
-        # فحص أول 4 تواريخ انتهاء لزيادة الخيارات
-        expirations = ticker.options[:4] if len(ticker.options) >= 4 else ticker.options
-        promising_calls, promising_puts = [], []
-        current_price = ind['price']
-        
-        for exp in expirations:
-            chain = ticker.option_chain(exp)
-            
-            # --- تحليل CALLS ---
-            for _, row in chain.calls.iterrows():
-                if 0.10 < row['lastPrice'] < 3.0:  # توسيع نطاق السعر الرخيص
-                    distance = ((row['strike'] - current_price) / current_price) * 100
-                    if 0 < distance < 5:  # توسيع المسافة قليلاً
-                        confidence = 0
-                        
-                        # نظام مكافأة وعقاب ذكي
-                        if ind['rsi'] < brain['rsi_buy_threshold']: confidence += 35
-                        elif ind['rsi'] > 60: confidence -= 25  # عقاب: لا تشترِ CALL والـ RSI مرتفع
-                        
-                        if ind['macd'] > ind['macd_signal']: confidence += 25
-                        else: confidence -= 15  # عقاب: الزخم سلبي
-                        
-                        if ind['vix'] < 20: confidence += 20
-                        elif ind['vix'] > 30: confidence -= 30  # عقاب شديد: الخوف مرتفع جداً
-                        
-                        if row['volume'] > 500: confidence += 15  # سيولة جيدة
-                        if row.get('delta', 0) > 0.3: confidence += 10
-                        
-                        # مكافأة إضافية للعقود الرخيصة جداً
-                        if row['lastPrice'] < 1.0: confidence += 10
-                        
-                        if confidence >= 30:  # خفضنا العتبة من 40 إلى 30 لظهور عقود أكثر
-                            option_info = get_option_full_info(row['strike'], 'CALL', exp)
-                            promising_calls.append({
-                                'type': 'CALL', 'strike': row['strike'], 'price': row['lastPrice'], 'exp': exp,
-                                'volume': int(row.get('volume', 0)), 'iv': row.get('impliedVolatility', 0) * 100, 
-                                'delta': row.get('delta', 0), 'distance_pct': round(distance, 2), 
-                                'confidence': confidence,
-                                'reason': 'إشارة قوية + سعر رخيص' if confidence > 60 else 'ظروف مناسبة',
-                                'option_symbol': option_info['symbol'] if option_info else 'N/A',
-                                'dte_text': option_info['dte_text'] if option_info else 'N/A',
-                                'open_interest': option_info['open_interest'] if option_info else 0,
-                                'bid': option_info['bid'] if option_info else 0, 
-                                'ask': option_info['ask'] if option_info else 0,
-                                'spread': option_info['spread'] if option_info else 0,
-                                'in_the_money': option_info['in_the_money'] if option_info else False
-                            })
-
-            # --- تحليل PUTS ---
-            for _, row in chain.puts.iterrows():
-                if 0.10 < row['lastPrice'] < 3.0:
-                    distance = ((current_price - row['strike']) / current_price) * 100
-                    if 0 < distance < 5:
-                        confidence = 0
-                        
-                        if ind['rsi'] > brain['rsi_sell_threshold']: confidence += 35
-                        elif ind['rsi'] < 40: confidence -= 25  # عقاب: لا تشترِ PUT والـ RSI منخفض
-                        
-                        if ind['macd'] < ind['macd_signal']: confidence += 25
-                        else: confidence -= 15
-                        
-                        if ind['vix'] > 25: confidence += 20  # الـ PUT يحب الخوف
-                        elif ind['vix'] < 15: confidence -= 20  # عقاب: السوق هادئ جداً للـ PUT
-                        
-                        if row['volume'] > 500: confidence += 15
-                        if abs(row.get('delta', 0)) > 0.3: confidence += 10
-                        
-                        if row['lastPrice'] < 1.0: confidence += 10
-                        
-                        if confidence >= 30:
-                            option_info = get_option_full_info(row['strike'], 'PUT', exp)
-                            promising_puts.append({
-                                'type': 'PUT', 'strike': row['strike'], 'price': row['lastPrice'], 'exp': exp,
-                                'volume': int(row.get('volume', 0)), 'iv': row.get('impliedVolatility', 0) * 100, 
-                                'delta': row.get('delta', 0), 'distance_pct': round(distance, 2), 
-                                'confidence': confidence,
-                                'reason': 'إشارة قوية + سعر رخيص' if confidence > 60 else 'ظروف مناسبة',
-                                'option_symbol': option_info['symbol'] if option_info else 'N/A',
-                                'dte_text': option_info['dte_text'] if option_info else 'N/A',
-                                'open_interest': option_info['open_interest'] if option_info else 0,
-                                'bid': option_info['bid'] if option_info else 0, 
-                                'ask': option_info['ask'] if option_info else 0,
-                                'spread': option_info['spread'] if option_info else 0,
-                                'in_the_money': option_info['in_the_money'] if option_info else False
-                            })
-        
-        # ترتيب ذكي: الأعلى ثقة أولاً، وإذا تساوت الثقة فالأرخص أولاً
-        promising_calls.sort(key=lambda x: (x['confidence'], -x['price']), reverse=True)
-        promising_puts.sort(key=lambda x: (x['confidence'], -x['price']), reverse=True)
-        
-        # زيادة العدد المعروض من 5 إلى 8
-        options_data = {
-            'timestamp': datetime.now(timezone.utc).isoformat(), 
-            'current_price': current_price, 
-            'calls': promising_calls[:8], 
-            'puts': promising_puts[:8], 
-            'status': 'pending'
-        }
-        history = load_json(PROMISING_OPTIONS_FILE, {'options': []})
-        history['options'].append(options_data)
-        if len(history['options']) > 100: history['options'] = history['options'][-100:]
-        save_json(PROMISING_OPTIONS_FILE, history)
-        return options_data, None
-    except Exception as e: return None, f"❌ خطأ: {str(e)}"
-
-def track_option_performance():
-    history = load_json(PROMISING_OPTIONS_FILE, {'options': []})
-    brain = get_brain()
-    updated = False
-    for batch in history['options']:
-        if batch.get('status') == 'tracked': continue
-        batch_time = datetime.fromisoformat(batch['timestamp'])
-        hours_since = (datetime.now(timezone.utc) - batch_time).total_seconds() / 3600
-        if hours_since < 24: continue
-        try:
-            current_data = yf.Ticker('SPY').history(period='1d')
-            if len(current_data) < 1: continue
-            current_price = float(current_data['Close'].iloc[-1])
-            predicted_price = batch['current_price']
-            change_pct = ((current_price - predicted_price) / predicted_price) * 100
-            calls_correct = sum(1 for _ in batch.get('calls', []) if change_pct > 0.5)
-            puts_correct = sum(1 for _ in batch.get('puts', []) if change_pct < -0.5)
-            batch['status'] = 'tracked'
-            batch['actual_change'] = round(change_pct, 2)
-            brain['option_success_rate']['total_tracked'] += len(batch.get('calls', [])) + len(batch.get('puts', []))
-            brain['option_success_rate']['calls'] += calls_correct
-            brain['option_success_rate']['puts'] += puts_correct
-            updated = True
-        except: continue
-    if updated:
-        save_json(PROMISING_OPTIONS_FILE, history)
-        save_brain(brain)
-    return updated
-
 def calculate_indicators():
     global _indicators_cache
     now = time.time()
@@ -270,7 +129,9 @@ def calculate_indicators():
         }
         _indicators_cache = {'data': result, 'timestamp': now}
         return result
-    except: return None
+    except Exception as e:
+        print(f"خطأ في calculate_indicators: {e}")
+        return None
 
 def calculate_support_resistance():
     try:
@@ -303,34 +164,248 @@ def analyze_news_sentiment():
     except: return 'neutral', []
 
 def detect_unusual_activity():
+    """دالة محسنة لاكتشاف نشاط الحيتان مع اسم العقد وتاريخ الانتهاء"""
     try:
         ticker = yf.Ticker('SPY')
-        if not ticker.options: return None
-        exp = ticker.options[0]  # أقرب تاريخ انتهاء
-        chain = ticker.option_chain(exp)
-        calls, puts = chain.calls, chain.puts
-        avg_c, avg_p = calls['volume'].mean(), puts['volume'].mean()
+        if not ticker.options: 
+            print("لا توجد خيارات متاحة")
+            return None
+        
+        # نفحص أول تاريخين انتهاء
+        expirations = ticker.options[:2]
         alerts = []
         
-        # خفضنا الشرط من 3 أضعاف إلى 2.5 لظهور عقود أكثر، وزدنا الحد الأقصى إلى 4
-        for _, row in calls[calls['volume'] > avg_c * 2.5].head(4).iterrows():
-            opt_info = get_option_full_info(row['strike'], 'CALL', exp)
-            alerts.append({
-                'type': 'CALL', 'strike': row['strike'], 'volume': int(row['volume']), 
-                'ratio': round(row['volume']/avg_c, 1),
-                'symbol': opt_info['symbol'] if opt_info else 'N/A',
-                'exp': exp
-            })
-        for _, row in puts[puts['volume'] > avg_p * 2.5].head(4).iterrows():
-            opt_info = get_option_full_info(row['strike'], 'PUT', exp)
-            alerts.append({
-                'type': 'PUT', 'strike': row['strike'], 'volume': int(row['volume']), 
-                'ratio': round(row['volume']/avg_p, 1),
-                'symbol': opt_info['symbol'] if opt_info else 'N/A',
-                'exp': exp
-            })
-        return alerts[:5] if alerts else None  # إرجاع حتى 5 تنبيهات
-    except: return None
+        for exp in expirations:
+            chain = ticker.option_chain(exp)
+            calls, puts = chain.calls, chain.puts
+            
+            # حساب متوسط الحجم
+            avg_c = calls['volume'].mean() if len(calls) > 0 else 0
+            avg_p = puts['volume'].mean() if len(puts) > 0 else 0
+            
+            if avg_c == 0 or avg_p == 0:
+                continue
+            
+            # خفضنا الشرط من 3 أضعاف إلى 2.5 لظهور عقود أكثر
+            unusual_calls = calls[calls['volume'] > avg_c * 2.5].head(3)
+            unusual_puts = puts[puts['volume'] > avg_p * 2.5].head(3)
+            
+            for _, row in unusual_calls.iterrows():
+                opt_info = get_option_full_info(row['strike'], 'CALL', exp)
+                alerts.append({
+                    'type': 'CALL', 
+                    'strike': row['strike'], 
+                    'volume': int(row['volume']), 
+                    'ratio': round(row['volume']/avg_c, 1),
+                    'symbol': opt_info['symbol'] if opt_info else 'N/A',
+                    'exp': exp,
+                    'dte_text': opt_info['dte_text'] if opt_info else 'N/A'
+                })
+            
+            for _, row in unusual_puts.iterrows():
+                opt_info = get_option_full_info(row['strike'], 'PUT', exp)
+                alerts.append({
+                    'type': 'PUT', 
+                    'strike': row['strike'], 
+                    'volume': int(row['volume']), 
+                    'ratio': round(row['volume']/avg_p, 1),
+                    'symbol': opt_info['symbol'] if opt_info else 'N/A',
+                    'exp': exp,
+                    'dte_text': opt_info['dte_text'] if opt_info else 'N/A'
+                })
+        
+        # إرجاع حتى 6 تنبيهات
+        return alerts[:6] if alerts else None
+    except Exception as e:
+        print(f"خطأ في detect_unusual_activity: {e}")
+        return None
+
+def find_promising_cheap_options():
+    """دالة محسنة للعثور على عقود رخيصة وواعدة مع نظام عقاب ومكافأة"""
+    try:
+        ticker = yf.Ticker('SPY')
+        if not ticker.options: 
+            print("لا توجد خيارات متاحة")
+            return None, "❌ لا توجد بيانات."
+        
+        ind = calculate_indicators()
+        if not ind: 
+            print("لا يمكن جلب المؤشرات")
+            return None, "❌ لا يمكن جلب المؤشرات."
+        
+        brain = get_brain()
+        print(f"المؤشرات: RSI={ind['rsi']}, MACD={ind['macd']}, VIX={ind['vix']}, السعر={ind['price']}")
+        
+        # فحص أول 4 تواريخ انتهاء لزيادة الخيارات
+        expirations = ticker.options[:4] if len(ticker.options) >= 4 else ticker.options
+        promising_calls, promising_puts = [], []
+        current_price = ind['price']
+        
+        for exp in expirations:
+            chain = ticker.option_chain(exp)
+            
+            # --- تحليل CALLS ---
+            for _, row in chain.calls.iterrows():
+                # توسيع نطاق السعر الرخيص
+                if 0.05 < row['lastPrice'] < 5.0:
+                    distance = ((row['strike'] - current_price) / current_price) * 100
+                    # توسيع المسافة إلى 8%
+                    if -2 < distance < 8:
+                        confidence = 0
+                        
+                        # نظام مكافأة وعقاب ذكي
+                        if ind['rsi'] < brain['rsi_buy_threshold']: 
+                            confidence += 35
+                        elif ind['rsi'] > 60: 
+                            confidence -= 25  # عقاب: لا تشترِ CALL والـ RSI مرتفع
+                        
+                        if ind['macd'] > ind['macd_signal']: 
+                            confidence += 25
+                        else: 
+                            confidence -= 15  # عقاب: الزخم سلبي
+                        
+                        if ind['vix'] < 20: 
+                            confidence += 20
+                        elif ind['vix'] > 30: 
+                            confidence -= 30  # عقاب شديد: الخوف مرتفع جداً
+                        
+                        if row['volume'] > 500: 
+                            confidence += 15  # سيولة جيدة
+                        if row.get('delta', 0) > 0.3: 
+                            confidence += 10
+                        
+                        # مكافأة إضافية للعقود الرخيصة جداً
+                        if row['lastPrice'] < 1.0: 
+                            confidence += 10
+                        
+                        # خفضنا العتبة من 40 إلى 20 لظهور عقود أكثر
+                        if confidence >= 20:
+                            option_info = get_option_full_info(row['strike'], 'CALL', exp)
+                            promising_calls.append({
+                                'type': 'CALL', 
+                                'strike': row['strike'], 
+                                'price': row['lastPrice'], 
+                                'exp': exp,
+                                'volume': int(row.get('volume', 0)), 
+                                'iv': row.get('impliedVolatility', 0) * 100, 
+                                'delta': row.get('delta', 0), 
+                                'distance_pct': round(distance, 2), 
+                                'confidence': confidence,
+                                'reason': 'إشارة قوية + سعر رخيص' if confidence > 60 else 'ظروف مناسبة',
+                                'option_symbol': option_info['symbol'] if option_info else 'N/A',
+                                'dte_text': option_info['dte_text'] if option_info else 'N/A',
+                                'open_interest': option_info['open_interest'] if option_info else 0,
+                                'bid': option_info['bid'] if option_info else 0, 
+                                'ask': option_info['ask'] if option_info else 0,
+                                'spread': option_info['spread'] if option_info else 0,
+                                'in_the_money': option_info['in_the_money'] if option_info else False
+                            })
+
+            # --- تحليل PUTS ---
+            for _, row in chain.puts.iterrows():
+                if 0.05 < row['lastPrice'] < 5.0:
+                    distance = ((current_price - row['strike']) / current_price) * 100
+                    if -2 < distance < 8:
+                        confidence = 0
+                        
+                        if ind['rsi'] > brain['rsi_sell_threshold']: 
+                            confidence += 35
+                        elif ind['rsi'] < 40: 
+                            confidence -= 25  # عقاب: لا تشترِ PUT والـ RSI منخفض
+                        
+                        if ind['macd'] < ind['macd_signal']: 
+                            confidence += 25
+                        else: 
+                            confidence -= 15
+                        
+                        if ind['vix'] > 25: 
+                            confidence += 20  # الـ PUT يحب الخوف
+                        elif ind['vix'] < 15: 
+                            confidence -= 20  # عقاب: السوق هادئ جداً للـ PUT
+                        
+                        if row['volume'] > 500: 
+                            confidence += 15
+                        if abs(row.get('delta', 0)) > 0.3: 
+                            confidence += 10
+                        
+                        if row['lastPrice'] < 1.0: 
+                            confidence += 10
+                        
+                        if confidence >= 20:
+                            option_info = get_option_full_info(row['strike'], 'PUT', exp)
+                            promising_puts.append({
+                                'type': 'PUT', 
+                                'strike': row['strike'], 
+                                'price': row['lastPrice'], 
+                                'exp': exp,
+                                'volume': int(row.get('volume', 0)), 
+                                'iv': row.get('impliedVolatility', 0) * 100, 
+                                'delta': row.get('delta', 0), 
+                                'distance_pct': round(distance, 2), 
+                                'confidence': confidence,
+                                'reason': 'إشارة قوية + سعر رخيص' if confidence > 60 else 'ظروف مناسبة',
+                                'option_symbol': option_info['symbol'] if option_info else 'N/A',
+                                'dte_text': option_info['dte_text'] if option_info else 'N/A',
+                                'open_interest': option_info['open_interest'] if option_info else 0,
+                                'bid': option_info['bid'] if option_info else 0, 
+                                'ask': option_info['ask'] if option_info else 0,
+                                'spread': option_info['spread'] if option_info else 0,
+                                'in_the_money': option_info['in_the_money'] if option_info else False
+                            })
+        
+        print(f"تم العثور على {len(promising_calls)} CALL و {len(promising_puts)} PUT")
+        
+        # ترتيب ذكي: الأعلى ثقة أولاً، وإذا تساوت الثقة فالأرخص أولاً
+        promising_calls.sort(key=lambda x: (x['confidence'], -x['price']), reverse=True)
+        promising_puts.sort(key=lambda x: (x['confidence'], -x['price']), reverse=True)
+        
+        # زيادة العدد المعروض من 5 إلى 8
+        options_data = {
+            'timestamp': datetime.now(timezone.utc).isoformat(), 
+            'current_price': current_price, 
+            'calls': promising_calls[:8], 
+            'puts': promising_puts[:8], 
+            'status': 'pending'
+        }
+        
+        history = load_json(PROMISING_OPTIONS_FILE, {'options': []})
+        history['options'].append(options_data)
+        if len(history['options']) > 100: history['options'] = history['options'][-100:]
+        save_json(PROMISING_OPTIONS_FILE, history)
+        
+        return options_data, None
+    except Exception as e:
+        print(f"خطأ في find_promising_cheap_options: {e}")
+        return None, f"❌ خطأ: {str(e)}"
+
+def track_option_performance():
+    history = load_json(PROMISING_OPTIONS_FILE, {'options': []})
+    brain = get_brain()
+    updated = False
+    for batch in history['options']:
+        if batch.get('status') == 'tracked': continue
+        batch_time = datetime.fromisoformat(batch['timestamp'])
+        hours_since = (datetime.now(timezone.utc) - batch_time).total_seconds() / 3600
+        if hours_since < 24: continue
+        try:
+            current_data = yf.Ticker('SPY').history(period='1d')
+            if len(current_data) < 1: continue
+            current_price = float(current_data['Close'].iloc[-1])
+            predicted_price = batch['current_price']
+            change_pct = ((current_price - predicted_price) / predicted_price) * 100
+            calls_correct = sum(1 for _ in batch.get('calls', []) if change_pct > 0.5)
+            puts_correct = sum(1 for _ in batch.get('puts', []) if change_pct < -0.5)
+            batch['status'] = 'tracked'
+            batch['actual_change'] = round(change_pct, 2)
+            brain['option_success_rate']['total_tracked'] += len(batch.get('calls', [])) + len(batch.get('puts', []))
+            brain['option_success_rate']['calls'] += calls_correct
+            brain['option_success_rate']['puts'] += puts_correct
+            updated = True
+        except: continue
+    if updated:
+        save_json(PROMISING_OPTIONS_FILE, history)
+        save_brain(brain)
+    return updated
 
 def suggest_strategy(ind, brain):
     if ind['vix'] > 25 and abs(ind['rsi'] - 50) < 20: return {'name': 'Iron Condor', 'desc': 'سوق متذبذب مع خوف مرتفع', 'action': 'بيع Call و Put بعيداً عن السعر'}
@@ -367,7 +442,7 @@ def calculate_what_if(target_price):
         total_pnl += pnl
         emoji = "🟢" if pnl >= 0 else "🔴"
         msg += f"{emoji} <b>{pos['type']} {pos['strike']}</b>: {pnl:+.2f}$ ({((current_opt - pos['entry']) / pos['entry'])*100:+.1f}%)\n"
-    msg += f"\n💰 <b>الإجمالي:</b> {total_pnl:+.2f}$"
+    msg += f"\n <b>الإجمالي:</b> {total_pnl:+.2f}$"
     return msg
 
 def generate_morning_report():
@@ -383,39 +458,39 @@ def generate_morning_report():
     sentiment, articles = analyze_news_sentiment()
     strategy = suggest_strategy(ind, brain)
     
-    msg = f"🌅 <b>تقرير الصباح الشامل والتلقائي</b>\n"
-    msg += f"📅 {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time_with_seconds']}\n\n"
+    msg = f" <b>تقرير الصباح الشامل والتلقائي</b>\n"
+    msg += f" {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time_with_seconds']}\n\n"
     
-    msg += f"<b> حالة السوق والتحليل:</b>\n"
-    msg += f"💰 SPY: ${ind['price']} | 📈 RSI: {ind['rsi']} | 😱 VIX: {ind['vix']}\n"
+    msg += f"<b>📊 حالة السوق والتحليل:</b>\n"
+    msg += f"💰 SPY: ${ind['price']} |  RSI: {ind['rsi']} | 😱 VIX: {ind['vix']}\n"
     msg += f"📉 MACD: {'إيجابي ✅' if ind['macd'] > ind['macd_signal'] else 'سلبي ❌'}\n"
     msg += f"📰 <b>مشاعر الأخبار:</b> {sentiment.upper()} {'🟢' if sentiment=='positive' else '🔴' if sentiment=='negative' else '🟡'}\n"
     if articles: msg += f"• {articles[0]['title'][:50]}...\n"
     
     msg += f"\n🗺️ <b>الدعم والمقاومة:</b>\n"
     if levels:
-        msg += f"🔴 مقاومة: {', '.join([f'${r}' for r in levels['resistance']])}\n"
+        msg += f" مقاومة: {', '.join([f'${r}' for r in levels['resistance']])}\n"
         msg += f"🟢 دعم: {', '.join([f'${s}' for s in levels['support']])}\n"
     
     msg += f"\n🧠 <b>الاستراتيجية المقترحة:</b> {strategy['name']}\n"
-    msg += f"📝 {strategy['desc']}\n⚡ {strategy['action']}\n\n"
+    msg += f" {strategy['desc']}\n⚡ {strategy['action']}\n\n"
     
     if options_data['calls']:
-        msg += f" <b>أفضل 8 عقود CALL واعدة:</b>\n\n"
+        msg += f"🟢 <b>أفضل 8 عقود CALL واعدة:</b>\n\n"
         for i, c in enumerate(options_data['calls'][:8], 1):
             potential = ((c['strike'] - ind['price']) / c['price']) * 100 if c['price'] > 0 else 0
             msg += f"{i}. <b>Strike ${c['strike']}</b> | 💵 ${c['price']} | 📅 {c['exp']}\n"
-            msg += f"    <code>{c.get('option_symbol', 'N/A')}</code> | ⏳ {c.get('dte_text', 'N/A')}\n"
+            msg += f"   🆔 <code>{c.get('option_symbol', 'N/A')}</code> | ⏳ {c.get('dte_text', 'N/A')}\n"
             msg += f"   💹 Bid/Ask: ${c.get('bid', 0)}/${c.get('ask', 0)} | OI: {c.get('open_interest', 0)}\n"
-            msg += f"   🎯 الثقة: {c['confidence']}% | IV: {c['iv']:.1f}% | Delta: {c['delta']:.2f}\n"
+            msg += f"    الثقة: {c['confidence']}% | IV: {c['iv']:.1f}% | Delta: {c['delta']:.2f}\n"
             msg += f"   💰 العائد: +{potential:.0f}% | 🧠 {c['reason']}\n\n"
     
     if options_data['puts']:
-        msg += f"🔴 <b>أفضل 8 عقود PUT واعدة:</b>\n\n"
+        msg += f" <b>أفضل 8 عقود PUT واعدة:</b>\n\n"
         for i, p in enumerate(options_data['puts'][:8], 1):
             potential = ((ind['price'] - p['strike']) / p['price']) * 100 if p['price'] > 0 else 0
             msg += f"{i}. <b>Strike ${p['strike']}</b> | 💵 ${p['price']} | 📅 {p['exp']}\n"
-            msg += f"   🆔 <code>{p.get('option_symbol', 'N/A')}</code> | ⏳ {p.get('dte_text', 'N/A')}\n"
+            msg += f"    <code>{p.get('option_symbol', 'N/A')}</code> | ⏳ {p.get('dte_text', 'N/A')}\n"
             msg += f"   💹 Bid/Ask: ${p.get('bid', 0)}/${p.get('ask', 0)} | OI: {p.get('open_interest', 0)}\n"
             msg += f"   🎯 الثقة: {p['confidence']}% | IV: {p['iv']:.1f}% | Delta: {p['delta']:.2f}\n"
             msg += f"   💰 العائد: +{potential:.0f}% | 🧠 {p['reason']}\n\n"
@@ -433,10 +508,10 @@ def get_periodic_options_report():
     levels = calculate_support_resistance()
     
     msg = f"💎 <b>عقود واعدة الآن</b>\n"
-    msg += f" {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} (السعودية)\n"
-    msg += f"💰 SPY: ${ind['price']} | 📈 RSI: {ind['rsi']} | 😱 VIX: {ind['vix']}\n\n"
+    msg += f"📅 {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} (السعودية)\n"
+    msg += f" SPY: ${ind['price']} |  RSI: {ind['rsi']} | 😱 VIX: {ind['vix']}\n\n"
     
-    msg += f"🗺️ <b>المستويات:</b>\n"
+    msg += f"️ <b>المستويات:</b>\n"
     if levels:
         msg += f"🔴 مقاومة: {', '.join([f'${r}' for r in levels['resistance']])}\n"
         msg += f"🟢 دعم: {', '.join([f'${s}' for s in levels['support']])}\n\n"
@@ -446,20 +521,20 @@ def get_periodic_options_report():
         for i, c in enumerate(options_data['calls'][:5], 1):
             potential = ((c['strike'] - ind['price']) / c['price']) * 100 if c['price'] > 0 else 0
             msg += f"{i}. <b>Strike ${c['strike']}</b> | 💵 ${c['price']} | 📅 {c['exp']}\n"
-            msg += f"   🆔 <code>{c.get('option_symbol', 'N/A')}</code> | ⏳ {c.get('dte_text', 'N/A')}\n"
-            msg += f"   💹 Bid/Ask: ${c.get('bid', 0)}/${c.get('ask', 0)} | OI: {c.get('open_interest', 0)}\n"
-            msg += f"   🎯 الثقة: {c['confidence']}% | IV: {c['iv']:.1f}% | Delta: {c['delta']:.2f}\n"
+            msg += f"   🆔 <code>{c.get('option_symbol', 'N/A')}</code> |  {c.get('dte_text', 'N/A')}\n"
+            msg += f"    Bid/Ask: ${c.get('bid', 0)}/${c.get('ask', 0)} | OI: {c.get('open_interest', 0)}\n"
+            msg += f"    الثقة: {c['confidence']}% | IV: {c['iv']:.1f}% | Delta: {c['delta']:.2f}\n"
             msg += f"   💰 العائد: +{potential:.0f}% | 🧠 {c['reason']}\n\n"
     
     if options_data['puts']:
-        msg += f"🔴 <b>أفضل 5 PUTs واعدة:</b>\n\n"
+        msg += f" <b>أفضل 5 PUTs واعدة:</b>\n\n"
         for i, p in enumerate(options_data['puts'][:5], 1):
             potential = ((ind['price'] - p['strike']) / p['price']) * 100 if p['price'] > 0 else 0
-            msg += f"{i}. <b>Strike ${p['strike']}</b> | 💵 ${p['price']} |  {p['exp']}\n"
-            msg += f"   🆔 <code>{p.get('option_symbol', 'N/A')}</code> | ⏳ {p.get('dte_text', 'N/A')}\n"
+            msg += f"{i}. <b>Strike ${p['strike']}</b> | 💵 ${p['price']} | 📅 {p['exp']}\n"
+            msg += f"    <code>{p.get('option_symbol', 'N/A')}</code> | ⏳ {p.get('dte_text', 'N/A')}\n"
             msg += f"   💹 Bid/Ask: ${p.get('bid', 0)}/${p.get('ask', 0)} | OI: {p.get('open_interest', 0)}\n"
             msg += f"   🎯 الثقة: {p['confidence']}% | IV: {p['iv']:.1f}% | Delta: {p['delta']:.2f}\n"
-            msg += f"   💰 العائد: +{potential:.0f}% |  {p['reason']}\n\n"
+            msg += f"   💰 العائد: +{potential:.0f}% | 🧠 {p['reason']}\n\n"
     
     msg += f"\n⚠️ <b>تنبيه:</b> استخدم إدارة رأس مال صارمة."
     return msg
@@ -515,10 +590,10 @@ def deep_learn_from_mistakes():
         avg_vix_in_wrong = sum(s['indicators'].get('vix', 20) for s in wrong_calls) / len(wrong_calls)
         if avg_vix_in_wrong > 25:
             brain['vix_fear_level'] = min(35, brain['vix_fear_level'] + 2)
-            lessons.append(f"📉 أخطاء CALLs بسبب الخوف العالي. رفع حد VIX المسموح به إلى {brain['vix_fear_level']}")
+            lessons.append(f" أخطاء CALLs بسبب الخوف العالي. رفع حد VIX المسموح به إلى {brain['vix_fear_level']}")
         else:
             brain['rsi_buy_threshold'] = max(15, brain['rsi_buy_threshold'] - 3)
-            lessons.append(f" أخطاء CALLs. تشديد شرط الشراء: RSI يجب أن يكون < {brain['rsi_buy_threshold']}")
+            lessons.append(f"📉 أخطاء CALLs. تشديد شرط الشراء: RSI يجب أن يكون < {brain['rsi_buy_threshold']}")
         updated = True
 
     # 2. تحليل أخطاء الـ PUT
@@ -559,14 +634,14 @@ def generate_prediction():
     else: score -= 1; reasons.append("❌ MACD سلبي")
     if ind['vix'] > brain['vix_fear_level']: score -= 2; reasons.append(f"⚠️ VIX مرتفع ({ind['vix']})")
     else: score += 1; reasons.append(f"🟢 VIX مستقر ({ind['vix']})")
-    if ind['price'] > ind['sma_20']: score += 1; reasons.append(f" السعر فوق SMA20")
-    if sentiment == 'positive': score += 1; reasons.append("📰 أخبار إيجابية")
-    elif sentiment == 'negative': score -= 1; reasons.append(" أخبار سلبية")
+    if ind['price'] > ind['sma_20']: score += 1; reasons.append(f"📊 السعر فوق SMA20")
+    if sentiment == 'positive': score += 1; reasons.append(" أخبار إيجابية")
+    elif sentiment == 'negative': score -= 1; reasons.append("📰 أخبار سلبية")
     
     if score >= 3: decision, advice = "🟢 شراء CALL", "💡 ادخل بـ 50% من حجمك وضع وقف خسارة -20%"
-    elif score <= -3: decision, advice = "🔴 شراء PUT", "💡 ادخل بحذر وضع هدف ربح +30%"
-    elif score >= 1: decision, advice = "🟡 CALL بحذر", "️ انتظر تأكيداً إضافياً"
-    elif score <= -1: decision, advice = " PUT بحذر", "⚠️ انتظر تأكيداً إضافياً"
+    elif score <= -3: decision, advice = " شراء PUT", "💡 ادخل بحذر وضع هدف ربح +30%"
+    elif score >= 1: decision, advice = "🟡 CALL بحذر", "⚠️ انتظر تأكيداً إضافياً"
+    elif score <= -1: decision, advice = "🟠 PUT بحذر", "⚠️ انتظر تأكيداً إضافياً"
     else: decision, advice = "⛔ لا تدخل", "💡 حافظ على رأس المال"
     
     signal = {'timestamp': datetime.now(timezone.utc).isoformat(), 'price': ind['price'], 'decision': decision, 'score': score, 'reasons': reasons, 'indicators': ind, 'strategy': strategy['name'], 'status': 'pending'}
@@ -578,7 +653,7 @@ def generate_prediction():
     
     msg = f"🤖 <b>توقع البوت التلقائي</b>\n"
     msg += f"📅 {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} السعودية\n\n"
-    msg += f"🎯 <b>القرار:</b> {decision}\n💰 <b>السعر:</b> ${ind['price']}\n <b>الاستراتيجية:</b> {strategy['name']}\n\n"
+    msg += f" <b>القرار:</b> {decision}\n💰 <b>السعر:</b> ${ind['price']}\n🧠 <b>الاستراتيجية:</b> {strategy['name']}\n\n"
     msg += f"<b>الأسباب:</b>\n" + "\n".join([f"• {r}" for r in reasons]) + f"\n\n{advice}\n"
     if levels: msg += f"🗺️ <b>المستويات:</b>\n• مقاومة: {', '.join([f'${r}' for r in levels['resistance']])}\n• دعم: {', '.join([f'${s}' for s in levels['support']])}\n"
     if articles: msg += f"📰 <b>الأخبار:</b>\n" + "\n".join([f"• {art['title'][:50]}..." for art in articles[:2]]) + "\n"
@@ -590,7 +665,7 @@ def handle_smart_chat(text, ind, brain):
     if any(w in text for w in ['كيف السوق', 'وضع السوق', 'السوق اليوم']):
         if not ind: return "❌ لا يمكن جلب البيانات."
         trend = "صاعد 🟢" if ind['price'] > ind['sma_20'] else "هابط 🔴"
-        return f" <b>ملخص سريع:</b>\nالاتجاه: {trend}\nVIX: {ind['vix']}\nRSI: {ind['rsi']}\n\n{'🟢 السوق جيد للفرص' if ind['vix'] < 25 else '⚠️ أنصح بالانتظار'}."
+        return f"📊 <b>ملخص سريع:</b>\nالاتجاه: {trend}\nVIX: {ind['vix']}\nRSI: {ind['rsi']}\n\n{'🟢 السوق جيد للفرص' if ind['vix'] < 25 else '⚠️ أنصح بالانتظار'}."
     if any(w in text for w in ['اشتري', 'هل ادخل', 'ادخل السوق']):
         if not ind: return "❌"
         if ind['rsi'] < brain['rsi_buy_threshold'] and ind['vix'] < brain['vix_fear_level']:
@@ -612,7 +687,7 @@ def check_auto_alerts(ind, levels, whales):
     if ind['vix'] > 30:
         alert_key = f"{today}_vix_high"
         if not any(a['key'] == alert_key for a in alerts_log['alerts']):
-            new_alerts.append(f" <b>تنبيه VIX مرتفع جداً!</b>\n🕐 {saudi_time['time']} السعودية\n\nمؤشر الخوف VIX وصل إلى {ind['vix']}!\n\n⚠️ هذا يعني:\n• تقلبات حادة في السوق\n• مخاطرة عالية جداً\n• أنصح بتقليل حجم الصفقات")
+            new_alerts.append(f"🚨 <b>تنبيه VIX مرتفع جداً!</b>\n🕐 {saudi_time['time']} السعودية\n\nمؤشر الخوف VIX وصل إلى {ind['vix']}!\n\n⚠️ هذا يعني:\n• تقلبات حادة في السوق\n• مخاطرة عالية جداً\n• أنصح بتقليل حجم الصفقات")
             alerts_log['alerts'].append({'key': alert_key, 'type': 'vix_high', 'time': saudi_time['full']})
     
     if levels and levels['resistance'] and ind['price'] > levels['resistance'][0]:
@@ -624,13 +699,13 @@ def check_auto_alerts(ind, levels, whales):
     if levels and levels['support'] and ind['price'] < levels['support'][0]:
         alert_key = f"{today}_breakdown_support"
         if not any(a['key'] == alert_key for a in alerts_log['alerts']):
-            new_alerts.append(f"️ <b>كسر دعم!</b>\n🕐 {saudi_time['time']} السعودية\n\n💰 السعر: ${ind['price']}\n🟢 الدعم: ${levels['support'][0]}\n\n🔴 إشارة هبوط!")
+            new_alerts.append(f"⚠️ <b>كسر دعم!</b>\n🕐 {saudi_time['time']} السعودية\n\n💰 السعر: ${ind['price']}\n🟢 الدعم: ${levels['support'][0]}\n\n🔴 إشارة هبوط!")
             alerts_log['alerts'].append({'key': alert_key, 'type': 'breakdown', 'time': saudi_time['full']})
             
     if ind['price'] > ind['bb_upper']:
         alert_key = f"{today}_bb_upper"
         if not any(a['key'] == alert_key for a in alerts_log['alerts']):
-            new_alerts.append(f"📈 <b>اختراق Bollinger Band العلوي!</b>\n🕐 {saudi_time['time']} السعودية\n\n💰 السعر: ${ind['price']} تجاوز ${ind['bb_upper']}\n⚠️ السوق في منطقة تشبع شرائي قوي، احذر من التصحيح!")
+            new_alerts.append(f"📈 <b>اختراق Bollinger Band العلوي!</b>\n {saudi_time['time']} السعودية\n\n السعر: ${ind['price']} تجاوز ${ind['bb_upper']}\n⚠️ السوق في منطقة تشبع شرائي قوي، احذر من التصحيح!")
             alerts_log['alerts'].append({'key': alert_key, 'type': 'bb_upper', 'time': saudi_time['full']})
             
     if ind['price'] < ind['bb_lower']:
@@ -643,11 +718,11 @@ def check_auto_alerts(ind, levels, whales):
         alert_key = f"{today}_whale_activity"
         if not any(a['key'] == alert_key for a in alerts_log['alerts']):
             whale_msg = f" <b>نشاط حيتان غير عادي!</b>\n🕐 {saudi_time['time']} السعودية\n\n"
-            for w in whales[:4]:  # عرض حتى 4 عقود
+            for w in whales[:6]:  # عرض حتى 6 عقود
                 emoji = "🟢" if w['type'] == 'CALL' else "🔴"
                 whale_msg += f"{emoji} <b>{w['type']} Strike ${w['strike']}</b>\n"
                 whale_msg += f"    <code>{w.get('symbol', 'N/A')}</code>\n"
-                whale_msg += f"   📅 الانتهاء: {w.get('exp', 'N/A')}\n"
+                whale_msg += f"   📅 الانتهاء: {w.get('exp', 'N/A')} ({w.get('dte_text', 'N/A')})\n"
                 whale_msg += f"   📊 الحجم: {w['volume']} (×{w['ratio']} من المعدل)\n\n"
             new_alerts.append(whale_msg)
             alerts_log['alerts'].append({'key': alert_key, 'type': 'whale', 'time': saudi_time['full']})
@@ -667,18 +742,18 @@ def generate_daily_report():
     pending = sum(1 for s in today_signals if s['status'] == 'pending')
     pnl_data = calculate_live_pnl()
     
-    msg = f"📊 <b>تقرير نهاية اليوم الشامل</b>\n"
-    msg += f"📅 {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} السعودية\n\n"
+    msg = f" <b>تقرير نهاية اليوم الشامل</b>\n"
+    msg += f" {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} السعودية\n\n"
     msg += f"<b>أداء البوت اليوم:</b>\n"
-    msg += f"✅ صحيح: {correct} | ❌ خاطئ: {wrong} | ⏳ معلق: {pending}\n"
-    if correct + wrong > 0: msg += f"🎯 الدقة: {(correct / (correct + wrong)) * 100:.1f}%\n"
+    msg += f"✅ صحيح: {correct} | ❌ خاطئ: {wrong} |  معلق: {pending}\n"
+    if correct + wrong > 0: msg += f" الدقة: {(correct / (correct + wrong)) * 100:.1f}%\n"
     
     if pnl_data:
         emoji = "🟢" if pnl_data['total_pnl'] >= 0 else "🔴"
         msg += f"\n💼 <b>ملخص المحفظة الحي (P&L):</b>\n"
         msg += f"{emoji} <b>إجمالي الربح/الخسارة:</b> ${pnl_data['total_pnl']}\n"
         for p in pnl_data['positions'][:3]:
-            p_emoji = "🟢" if p['pnl'] >= 0 else "🔴"
+            p_emoji = "🟢" if p['pnl'] >= 0 else ""
             msg += f"• {p_emoji} {p['type']} {p['strike']}: ${p['pnl']} ({p['pnl_pct']}%)\n"
             
     if brain['learning_history']:
@@ -694,9 +769,9 @@ def generate_weekly_report():
     wrong = brain['wrong_predictions']
     accuracy = (correct / total * 100) if total > 0 else 0
     win_rate = (correct / (correct + wrong) * 100) if (correct + wrong) > 0 else 0
-    msg = f" <b>التقرير الأسبوعي الشامل</b>\n"
-    msg += f" {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} السعودية\n\n"
-    msg += f"<b>🎯 الدقة العامة:</b>\n"
+    msg = f"📈 <b>التقرير الأسبوعي الشامل</b>\n"
+    msg += f"📅 {saudi_time['weekday']} {saudi_time['date']} | 🕐 {saudi_time['time']} السعودية\n\n"
+    msg += f"<b> الدقة العامة:</b>\n"
     msg += f"• إجمالي التوقعات: {total}\n• صحيح: {correct} ✅\n• خاطئ: {wrong} ❌\n"
     msg += f"• <b>نسبة الدقة:</b> {accuracy:.1f}%\n• <b>Win Rate:</b> {win_rate:.1f}%\n\n"
     if brain['accuracy_stats']['by_hour']:
@@ -729,7 +804,9 @@ def send_telegram(msg, parse_mode="HTML"):
             return True
         requests.post(url, json={"chat_id": CHAT_ID, "text": msg, "parse_mode": parse_mode}, timeout=10)
         return True
-    except: return False
+    except Exception as e:
+        print(f"خطأ في إرسال الرسالة: {e}")
+        return False
 
 def get_bot_id():
     try:
@@ -754,25 +831,25 @@ def get_option_data(strike):
         p = chain.puts.iloc[(chain.puts['strike'] - strike).abs().argsort()[:1].item()]
         call_info = get_option_full_info(strike, 'CALL', exp)
         put_info = get_option_full_info(strike, 'PUT', exp)
-        msg = f" <b>بيانات العقد: Strike ${strike}</b>\n"
-        msg += f" تاريخ الانتهاء: {exp}\n\n"
+        msg = f"🔥 <b>بيانات العقد: Strike ${strike}</b>\n"
+        msg += f"📅 تاريخ الانتهاء: {exp}\n\n"
         msg += f"🟢 <b>CALL:</b>\n"
-        msg += f"    السعر: ${c['lastPrice']:.2f}\n"
-        msg += f"    IV: {c['impliedVolatility']*100:.1f}% | Delta: {c['delta']:.2f}\n"
+        msg += f"   💵 السعر: ${c['lastPrice']:.2f}\n"
+        msg += f"   📊 IV: {c['impliedVolatility']*100:.1f}% | Delta: {c['delta']:.2f}\n"
         msg += f"   📦 Volume: {int(c['volume'])} | Open Interest: {int(c.get('openInterest', 0))}\n"
         if call_info:
-            msg += f"    <b>رقم العقد:</b> <code>{call_info['symbol']}</code>\n"
+            msg += f"   🆔 <b>رقم العقد:</b> <code>{call_info['symbol']}</code>\n"
             msg += f"   ⏳ <b>المدة:</b> {call_info['dte_text']} ({call_info['dte']} يوم)\n"
             msg += f"   💹 Bid: ${call_info['bid']} | Ask: ${call_info['ask']} | Spread: ${call_info['spread']}\n"
-            msg += f"    In The Money: {'نعم ✅' if call_info['in_the_money'] else 'لا ❌'}\n"
-            msg += f"    آخر تداول: {call_info['last_trade']}\n"
+            msg += f"   📈 In The Money: {'نعم ✅' if call_info['in_the_money'] else 'لا '}\n"
+            msg += f"   🕐 آخر تداول: {call_info['last_trade']}\n"
         msg += f"\n <b>PUT:</b>\n"
         msg += f"   💵 السعر: ${p['lastPrice']:.2f}\n"
         msg += f"   📊 IV: {p['impliedVolatility']*100:.1f}% | Delta: {p['delta']:.2f}\n"
-        msg += f"   📦 Volume: {int(p['volume'])} | Open Interest: {int(p.get('openInterest', 0))}\n"
+        msg += f"    Volume: {int(p['volume'])} | Open Interest: {int(p.get('openInterest', 0))}\n"
         if put_info:
             msg += f"   🆔 <b>رقم العقد:</b> <code>{put_info['symbol']}</code>\n"
-            msg += f"    <b>المدة:</b> {put_info['dte_text']} ({put_info['dte']} يوم)\n"
+            msg += f"   ⏳ <b>المدة:</b> {put_info['dte_text']} ({put_info['dte']} يوم)\n"
             msg += f"   💹 Bid: ${put_info['bid']} | Ask: ${put_info['ask']} | Spread: ${put_info['spread']}\n"
             msg += f"   📈 In The Money: {'نعم ✅' if put_info['in_the_money'] else 'لا ❌'}\n"
             msg += f"   🕐 آخر تداول: {put_info['last_trade']}\n"
@@ -817,19 +894,19 @@ def handle_commands():
                 acc = (brain['correct_predictions'] / max(1, brain['total_predictions'])) * 100
                 msg = f" <b>عقل البوت:</b>\n🎯 الدقة: {acc:.1f}%\n📏 RSI شراء: < {brain['rsi_buy_threshold']}\n📏 RSI بيع: > {brain['rsi_sell_threshold']}\n🛡️ VIX: > {brain['vix_fear_level']}\n\n<b>أخطاء:</b>\n"
                 for p, c in brain['mistake_patterns'].items(): msg += f"• {p}: {c}\n"
-                msg += f"\n آخر درس: {brain['last_adjustment_reason']}"
+                msg += f"\n📚 آخر درس: {brain['last_adjustment_reason']}"
                 send_telegram(msg)
             elif text == '/cheap':
-                send_telegram(" جاري البحث...")
+                send_telegram("🔍 جاري البحث...")
                 report = generate_morning_report()
                 if report: send_telegram(report)
             elif text == '/results':
                 results = check_prediction_results()
-                if results: send_telegram(f"📊 تم فحص {len(results)} توقع")
+                if results: send_telegram(f" تم فحص {len(results)} توقع")
                 else: send_telegram("لا توجد توقعات جديدة")
             elif text == '/stats':
                 acc = (brain['correct_predictions'] / max(1, brain['total_predictions'])) * 100
-                send_telegram(f"📊 <b>إحصائيات:</b>\n🎯 الدقة: {acc:.1f}%\n✅ {brain['correct_predictions']} |  {brain['wrong_predictions']}\n📈 إجمالي: {brain['total_predictions']}")
+                send_telegram(f"📊 <b>إحصائيات:</b>\n🎯 الدقة: {acc:.1f}%\n✅ {brain['correct_predictions']} | ❌ {brain['wrong_predictions']}\n📈 إجمالي: {brain['total_predictions']}")
             elif text == '/spx':
                 if ind: send_telegram(f"📊 <b>SPX/SPY</b>\n💰 ${ind['price']}\n📈 RSI: {ind['rsi']}\n📉 MACD: {ind['macd']}\n😱 VIX: {ind['vix']}\n📊 SMA50: ${ind['sma_50']}")
             elif text == '/levels':
@@ -837,18 +914,26 @@ def handle_commands():
                 if levels: send_telegram(f"🗺️ <b>الدعم والمقاومة</b>\n💰 ${levels['current_price']}\n\n🔴 مقاومة:\n" + "\n".join([f"• ${r}" for r in levels['resistance']]) + f"\n\n🟢 دعم:\n" + "\n".join([f"• ${s}" for s in levels['support']]))
             elif text == '/sentiment':
                 sent, arts = analyze_news_sentiment()
-                emoji = "" if sent == 'positive' else "" if sent == 'negative' else ""
+                emoji = "🟢" if sent == 'positive' else "🔴" if sent == 'negative' else "🟡"
                 send_telegram(f"📰 <b>{sent.upper()}</b> {emoji}\n\n" + "\n".join([f"• {a['title'][:60]}..." for a in arts]))
             elif text == '/whales':
                 whales = detect_unusual_activity()
-                if whales: send_telegram("🦈 <b>نشاط الحيتان</b>\n\n" + "\n\n".join([f"{'' if w['type'] == 'CALL' else '🔴'} <b>{w['type']} {w['strike']}</b>\nVol: {w['volume']} (×{w['ratio']})" for w in whales]))
+                if whales:
+                    whale_msg = "🦈 <b>نشاط الحيتان</b>\n\n"
+                    for w in whales:
+                        emoji = "🟢" if w['type'] == 'CALL' else "🔴"
+                        whale_msg += f"{emoji} <b>{w['type']} Strike ${w['strike']}</b>\n"
+                        whale_msg += f"   🆔 <code>{w.get('symbol', 'N/A')}</code>\n"
+                        whale_msg += f"   📅 الانتهاء: {w.get('exp', 'N/A')}\n"
+                        whale_msg += f"   📊 الحجم: {w['volume']} (×{w['ratio']})\n\n"
+                    send_telegram(whale_msg)
                 else: send_telegram("🦈 لا نشاط غير طبيعي")
             elif text == '/strategy':
                 if ind:
                     strat = suggest_strategy(ind, brain)
-                    send_telegram(f"🎯 <b>{strat['name']}</b>\n\n{strat['desc']}\n\n⚡ {strat['action']}")
+                    send_telegram(f" <b>{strat['name']}</b>\n\n{strat['desc']}\n\n {strat['action']}")
             elif text == '/daily':
-                send_telegram("📊 جاري التقرير...")
+                send_telegram(" جاري التقرير...")
                 report = generate_daily_report()
                 if report: send_telegram(report)
             elif text == '/events':
@@ -861,7 +946,7 @@ def handle_commands():
                     msg = "💼 <b>المحفظة</b>\n━━━━━━━━━━━━━━━\n"
                     for i, pos in enumerate(data['positions'], 1):
                         cost = pos['entry'] * 100 * pos['qty']
-                        emoji = "🟢" if pos['type'] == 'CALL' else "🔴"
+                        emoji = "" if pos['type'] == 'CALL' else "🔴"
                         pnl_info = ""
                         if pnl_data and i <= len(pnl_data['positions']):
                             p = pnl_data['positions'][i-1]
@@ -883,7 +968,7 @@ def handle_commands():
                     data = load_json(PORTFOLIO_FILE, {'positions': []})
                     total_cost = float(parts[2]) * 100 * int(parts[3])
                     if total_cost > (settings['capital'] * (settings['risk_percent'] / 100)):
-                        send_telegram(f"️ التكلفة (${total_cost:.2f}) تتجاوز المخاطرة!{warning}")
+                        send_telegram(f"⚠️ التكلفة (${total_cost:.2f}) تتجاوز المخاطرة!{warning}")
                     else:
                         data['positions'].append({'type': 'CALL', 'strike': float(parts[1]), 'entry': float(parts[2]), 'qty': int(parts[3]), 'date': datetime.now(timezone.utc).strftime('%Y-%m-%d')})
                         save_json(PORTFOLIO_FILE, data)
@@ -923,7 +1008,7 @@ def handle_commands():
     except Exception as e: print(f"خطأ: {e}")
 
 def run_autonomous_scan():
-    print(" بدء الفحص التلقائي...")
+    print("🤖 بدء الفحص التلقائي...")
     saudi_time = get_saudi_time()
     print(f"🕐 الوقت الحالي (السعودية): {saudi_time['time_with_seconds']}")
     
@@ -931,7 +1016,7 @@ def run_autonomous_scan():
     
     learned, lessons = deep_learn_from_mistakes()
     if learned:
-        send_telegram(f"🧠 <b>تعلم جديد!</b>\n🕐 {saudi_time['time']} السعودية\n\n" + "\n".join([f"• {l}" for l in lessons]))
+        send_telegram(f"🧠 <b>تعلم جديد!</b>\n {saudi_time['time']} السعودية\n\n" + "\n".join([f"• {l}" for l in lessons]))
     
     settings = get_settings()
     today_str = saudi_time['date']
@@ -982,7 +1067,7 @@ def run_autonomous_scan():
         if ind:
             brain = get_brain()
             acc = (brain['correct_predictions'] / max(1, brain['total_predictions'])) * 100
-            msg = f"⏰ <b>ملخص ما قبل الإغلاق التلقائي</b>\n🕐 {saudi_time['time']} السعودية\n\n"
+            msg = f"⏰ <b>ملخص ما قبل الإغلاق التلقائي</b>\n {saudi_time['time']} السعودية\n\n"
             msg += f"💰 SPY: ${ind['price']}\n📈 RSI: {ind['rsi']} | 😱 VIX: {ind['vix']}\n"
             msg += f"🎯 دقة اليوم: {acc:.1f}%\n\n"
             msg += f"⚠️ السوق سيغلق خلال 30 دقيقة.\nراجع صفقاتك واتخذ قراراتك!"
@@ -1007,7 +1092,7 @@ if __name__ == '__main__':
     print(f"🕐 الوقت الحالي (السعودية): {saudi_time['time_with_seconds']}")
     
     # إرسال رسالة تشغيل للتأكد من أن البوت يعمل
-    send_telegram(f" <b>تم تشغيل الفحص الدوري</b>\n🕐 {saudi_time['time_with_seconds']} (السعودية)")
+    send_telegram(f"🟢 <b>تم تشغيل الفحص الدوري</b>\n🕐 {saudi_time['time_with_seconds']} (السعودية)")
 
     # 1. معالجة الأوامر اليدوية من تيليجرام
     handle_commands()
