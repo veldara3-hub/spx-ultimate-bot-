@@ -1,0 +1,28 @@
+{
+  "signals": [
+    {
+      "timestamp": "2026-10-16T17:52:56.221901+00:00",
+      "price": 764.04,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (19.04)"
+      ],
+      "indicators": {
+        "rsi": 48.37,
+        "macd": 2.0856,
+        "macd_signal": 2.8952,
+        "sma_20": 771.22,
+        "sma_50": 767.42,
+        "bb_upper": 782.15,
+        "bb_lower": 760.29,
+        "volume_ratio": 0.74,
+        "price": 764.04,
+        "vix": 19.04
+      },
+      "strategy": "انتظار",
+      "status": "pending"
+    }
+  ]
+}
