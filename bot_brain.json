@@ -1,12 +1,12 @@
 {
-  "rsi_buy_threshold": 27,
+  "rsi_buy_threshold": 24,
   "rsi_sell_threshold": 70,
   "vix_fear_level": 25,
   "total_predictions": 0,
   "correct_predictions": 0,
   "wrong_predictions": 0,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-16T17:43:37.647375+00:00",
+  "last_prediction_sent": "2026-10-16T17:49:16.386294+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
@@ -17,6 +17,12 @@
       "date": "2026-10-16T17:43:36.798531+00:00",
       "lessons": [
         " أخطاء CALLs. تشديد شرط الشراء: RSI يجب أن يكون < 27"
+      ]
+    },
+    {
+      "date": "2026-10-16T17:49:15.310369+00:00",
+      "lessons": [
+        " أخطاء CALLs. تشديد شرط الشراء: RSI يجب أن يكون < 24"
       ]
     }
   ],
