@@ -1,24 +1,25 @@
 {
   "options": [
     {
-      "timestamp": "2026-10-16T17:53:08.811256+00:00",
-      "current_price": 764.04,
-      "calls": [
+      "timestamp": "2026-10-16T18:12:54.726982+00:00",
+      "current_price": 763.16,
+      "calls": [],
+      "puts": [
         {
-          "type": "CALL",
-          "strike": 778.0,
-          "price": 0.06,
-          "exp": "2026-10-19",
-          "volume": 10577,
-          "iv": 8.667905517578125,
+          "type": "PUT",
+          "strike": 756.0,
+          "price": 0.07,
+          "exp": "2026-10-16",
+          "volume": 53990,
+          "iv": 10.6454248046875,
           "delta": 0,
-          "distance_pct": 1.83,
-          "confidence": 30,
+          "distance_pct": 0.94,
+          "confidence": 50,
           "reason": "ظروف مناسبة",
-          "option_symbol": "SPY261019C00778000",
-          "dte_text": "2 يوم",
-          "open_interest": 2691,
-          "bid": 0.05,
-          "ask": 0.06,
+          "option_symbol": "SPY261016P00756000",
+          "dte_text": "-1 يوم",
+          "open_interest": 11895,
+          "bid": 0.07,
+          "ask": 0.08,
           "spread": 0.01,
           "in_the_money": 
