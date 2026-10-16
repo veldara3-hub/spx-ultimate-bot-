@@ -1,0 +1,25 @@
+{
+  "options": [
+    {
+      "timestamp": "2026-10-16T18:12:54.726982+00:00",
+      "current_price": 763.16,
+      "calls": [],
+      "puts": [
+        {
+          "type": "PUT",
+          "strike": 756.0,
+          "price": 0.07,
+          "exp": "2026-10-16",
+          "volume": 53990,
+          "iv": 10.6454248046875,
+          "delta": 0,
+          "distance_pct": 0.94,
+          "confidence": 50,
+          "reason": "ظروف مناسبة",
+          "option_symbol": "SPY261016P00756000",
+          "dte_text": "-1 يوم",
+          "open_interest": 11895,
+          "bid": 0.07,
+          "ask": 0.08,
+          "spread": 0.01,
+          "in_the_money": 
