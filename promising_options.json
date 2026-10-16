@@ -1,0 +1,24 @@
+{
+  "options": [
+    {
+      "timestamp": "2026-10-16T17:43:40.922182+00:00",
+      "current_price": 765.16,
+      "calls": [
+        {
+          "type": "CALL",
+          "strike": 782.0,
+          "price": 0.11,
+          "exp": "2026-10-21",
+          "volume": 1398,
+          "iv": 9.2782509765625,
+          "delta": 0,
+          "distance_pct": 2.2,
+          "confidence": 30,
+          "reason": "ظروف مناسبة",
+          "option_symbol": "SPY261021C00782000",
+          "dte_text": "4 يوم",
+          "open_interest": 875,
+          "bid": 0.11,
+          "ask": 0.12,
+          "spread": 0.01,
+          "in_the_money": 
