@@ -1,0 +1,80 @@
+{
+  "signals": [
+    {
+      "timestamp": "2026-10-16T17:52:56.221901+00:00",
+      "price": 764.04,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (19.04)"
+      ],
+      "indicators": {
+        "rsi": 48.37,
+        "macd": 2.0856,
+        "macd_signal": 2.8952,
+        "sma_20": 771.22,
+        "sma_50": 767.42,
+        "bb_upper": 782.15,
+        "bb_lower": 760.29,
+        "volume_ratio": 0.74,
+        "price": 764.04,
+        "vix": 19.04
+      },
+      "strategy": "انتظار",
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-16T18:12:50.820692+00:00",
+      "price": 763.16,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (20.82)"
+      ],
+      "indicators": {
+        "rsi": 47.5,
+        "macd": 2.0154,
+        "macd_signal": 2.8811,
+        "sma_20": 771.18,
+        "sma_50": 767.4,
+        "bb_upper": 782.24,
+        "bb_lower": 760.12,
+        "volume_ratio": 0.79,
+        "price": 763.16,
+        "vix": 20.82
+      },
+      "strategy": "انتظار",
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-16T18:41:17.693257+00:00",
+      "price": 762.36,
+      "decision": "🔴 شراء PUT",
+      "score": -3,
+      "reasons": [
+        "📉 📉 تدفق بيعي قوي",
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (21.34)",
+        "🕯️ 📉 ابتلاع هابط"
+      ],
+      "indicators": {
+        "rsi": 46.74,
+        "macd": 1.9516,
+        "macd_signal": 2.8684,
+        "sma_20": 771.14,
+        "sma_50": 767.38,
+        "bb_upper": 782.32,
+        "bb_lower": 759.95,
+        "volume_ratio": 0.87,
+        "price": 762.36,
+        "vix": 21.34,
+        "hourly_rsi": 34.62,
+        "weekly_rsi": 54.16,
+        "trend": "bearish"
+      },
+      "status": "pending"
+    }
+  ]
+}
