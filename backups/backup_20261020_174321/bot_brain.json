@@ -6,7 +6,7 @@
   "correct_predictions": 0,
   "wrong_predictions": 0,
   "last_adjustment_reason": "لم يبدأ التعلم بعد",
-  "last_prediction_sent": "2026-10-20T14:04:58.640327+00:00",
+  "last_prediction_sent": "2026-10-20T17:05:29.619437+00:00",
   "mistake_patterns": {
     "rsi_too_early": 0,
     "vix_ignored": 0,
