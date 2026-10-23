@@ -1527,6 +1527,35 @@
         "trend": "bearish"
       },
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-10-23T14:41:15.214301+00:00",
+      "price": 760.68,
+      "decision": "🟠 PUT بحذر",
+      "score": -1,
+      "reasons": [
+        "📉 📉 تدفق بيعي قوي",
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (20.55)",
+        " توافق الإطارات الزمنية",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 37.37,
+        "macd": -0.0609,
+        "macd_signal": 1.4699,
+        "sma_20": 770.19,
+        "sma_50": 766.91,
+        "bb_upper": 782.45,
+        "bb_lower": 757.92,
+        "volume_ratio": 0.21,
+        "price": 760.68,
+        "vix": 20.55,
+        "hourly_rsi": 27.55,
+        "weekly_rsi": 59.51,
+        "trend": "bearish"
+      },
+      "status": "pending"
     }
   ]
 }
