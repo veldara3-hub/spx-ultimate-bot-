@@ -3301,6 +3301,143 @@
         "trend": "bearish"
       },
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-03T18:11:51.287363+00:00",
+      "price": 756.69,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (20.68)",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 40.89,
+        "macd": -2.4395,
+        "macd_signal": -0.5951,
+        "sma_20": 768.21,
+        "sma_50": 766.44,
+        "bb_upper": 783.73,
+        "bb_lower": 752.69,
+        "volume_ratio": 0.4,
+        "price": 756.69,
+        "vix": 20.68,
+        "hourly_rsi": 51.68,
+        "weekly_rsi": 56.06,
+        "trend": "bearish"
+      },
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-04T11:50:57.935317+00:00",
+      "price": 754.35,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (18.3)",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 38.87,
+        "macd": -2.6261,
+        "macd_signal": -0.6324,
+        "sma_20": 768.09,
+        "sma_50": 766.4,
+        "bb_upper": 784.01,
+        "bb_lower": 752.18,
+        "volume_ratio": 0.83,
+        "price": 754.35,
+        "vix": 18.3,
+        "hourly_rsi": 47.48,
+        "weekly_rsi": 54.81,
+        "trend": "bearish"
+      },
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-04T18:59:18.389411+00:00",
+      "price": 767.36,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (16.89)",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 47.21,
+        "macd": -2.0826,
+        "macd_signal": -0.9225,
+        "sma_20": 767.6,
+        "sma_50": 766.46,
+        "bb_upper": 782.93,
+        "bb_lower": 752.27,
+        "volume_ratio": 0.9,
+        "price": 767.36,
+        "vix": 16.89,
+        "hourly_rsi": 70.41,
+        "weekly_rsi": 60.49,
+        "trend": "bearish"
+      },
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-05T18:33:58.673081+00:00",
+      "price": 735.92,
+      "decision": "🔴 شراء PUT",
+      "score": -5,
+      "reasons": [
+        "📉 📉 تدفق بيعي قوي",
+        "❌ MACD سلبي",
+        "⚠️ VIX مرتفع (26.89)",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 36.49,
+        "macd": -4.1753,
+        "macd_signal": -1.5804,
+        "sma_20": 765.67,
+        "sma_50": 765.89,
+        "bb_upper": 786.22,
+        "bb_lower": 745.12,
+        "volume_ratio": 1.52,
+        "price": 735.92,
+        "vix": 26.89,
+        "hourly_rsi": 31.39,
+        "weekly_rsi": 45.95,
+        "trend": "bearish"
+      },
+      "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-06T17:50:17.042420+00:00",
+      "price": 736.03,
+      "decision": "🟡 CALL بحذر",
+      "score": 1,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (24.42)",
+        " توافق الإطارات الزمنية",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 35.34,
+        "macd": -5.9042,
+        "macd_signal": -2.4831,
+        "sma_20": 763.4,
+        "sma_50": 765.16,
+        "bb_upper": 787.67,
+        "bb_lower": 739.13,
+        "volume_ratio": 0.64,
+        "price": 736.03,
+        "vix": 24.42,
+        "hourly_rsi": 14.72,
+        "weekly_rsi": 45.98,
+        "trend": "bearish"
+      },
+      "status": "pending"
     }
   ]
 }
