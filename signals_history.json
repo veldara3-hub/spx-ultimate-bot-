@@ -3549,6 +3549,33 @@
         "trend": "bullish"
       },
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-12T18:43:52.118462+00:00",
+      "price": 760.16,
+      "decision": "⛔ لا تدخل",
+      "score": 0,
+      "reasons": [
+        "❌ MACD سلبي",
+        "🟢 VIX مستقر (17.7)",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 50.08,
+        "macd": -4.0458,
+        "macd_signal": -3.917,
+        "sma_20": 759.62,
+        "sma_50": 764.49,
+        "bb_upper": 781.78,
+        "bb_lower": 737.45,
+        "volume_ratio": 0.44,
+        "price": 760.16,
+        "vix": 17.7,
+        "hourly_rsi": 73.8,
+        "weekly_rsi": 45.06,
+        "trend": "bullish"
+      },
+      "status": "pending"
     }
   ]
 }
