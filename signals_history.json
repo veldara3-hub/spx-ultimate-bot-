@@ -3719,6 +3719,35 @@
         "trend": "bearish"
       },
       "status": "pending"
+    },
+    {
+      "timestamp": "2026-11-20T18:59:39.489824+00:00",
+      "price": 701.74,
+      "decision": "🔴 شراء PUT",
+      "score": -4,
+      "reasons": [
+        "📉 📉 تدفق بيعي قوي",
+        "❌ MACD سلبي",
+        "⚠️ VIX مرتفع (31.79)",
+        " توافق الإطارات الزمنية",
+        "🕯️ 📊 لا توجد أنماط واضحة"
+      ],
+      "indicators": {
+        "rsi": 31.88,
+        "macd": -11.7513,
+        "macd_signal": -7.11,
+        "sma_20": 748.4,
+        "sma_50": 760.27,
+        "bb_upper": 786.12,
+        "bb_lower": 710.69,
+        "volume_ratio": 1.25,
+        "price": 701.74,
+        "vix": 31.79,
+        "hourly_rsi": 7.24,
+        "weekly_rsi": 26.85,
+        "trend": "bearish"
+      },
+      "status": "pending"
     }
   ]
 }
